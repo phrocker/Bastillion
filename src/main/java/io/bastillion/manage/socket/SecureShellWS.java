@@ -68,8 +68,10 @@ public class SecureShellWS {
 
     @OnMessage
     public void onMessage(String message) {
+        System.out.println("Message " + message);
 
         if (session.isOpen() && StringUtils.isNotEmpty(message) && !"heartbeat".equals(message)) {
+
 
             try {
                 Map jsonRoot = new Gson().fromJson(message, Map.class);
@@ -93,7 +95,23 @@ public class SecureShellWS {
                             if (keyMap.containsKey(keyCode)) {
                                 schSession.getCommander().write(keyMap.get(keyCode));
                             }
+                            schSession.getTerminalAuditor().keycode(keyCode);
+                            switch(keyCode){
+                                case 9:
+                                    schSession.getTerminalAuditor().setReceiveFromServer();
+                                    break;
+                                case 8:
+                                    schSession.getTerminalAuditor().keycode(keyCode);
+                                    break;
+                                case 13:
+                                    System.out.println("on message " + schSession.getTerminalAuditor().get().toString());
+                                default:
+                                    System.out.println(schSession.getTerminalAuditor().clear());
+                                    ;
+
+                            }
                         } else {
+                            schSession.getTerminalAuditor().append(command);
                             schSession.getCommander().print(command);
                         }
                     }

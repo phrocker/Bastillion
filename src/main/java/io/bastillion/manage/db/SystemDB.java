@@ -27,6 +27,8 @@ public class SystemDB {
     public static final String AUTHORIZED_KEYS = "authorized_keys";
     public static final String FILTER_BY_PROFILE_ID = "profile_id";
 
+    public static final String SYSTEM_ID = "display_nm";
+
     public static final String DISPLAY_NM = "display_nm";
     public static final String SORT_BY_NAME = DISPLAY_NM;
     public static final String SORT_BY_USER = "username";

@@ -8,10 +8,13 @@ package io.bastillion.manage.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.bastillion.common.util.AppConfig;
+import io.bastillion.manage.control.SecureShellKtrl;
 import io.bastillion.manage.db.SessionAuditDB;
 import io.bastillion.manage.model.AuditWrapper;
+import io.bastillion.manage.model.SchSession;
 import io.bastillion.manage.model.SessionOutput;
 import io.bastillion.manage.model.User;
+import io.bastillion.manage.model.UserSchSessions;
 import io.bastillion.manage.model.UserSessionsOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +95,15 @@ public class SessionOutputUtil {
      */
     public static void addToOutput(Long sessionId, Integer instanceId, char[] value, int offset, int count) {
 
+        UserSchSessions userSchSessions = SecureShellKtrl.getUserSchSessionMap().get(sessionId);
+        if (userSchSessions != null) {
+            SchSession schSession = userSchSessions.getSchSessionMap().get(instanceId);
+            if (null != schSession){
+                if (schSession.getTerminalAuditor().shouldReceiveFromServer()){
+                    schSession.getTerminalAuditor().receiveFromServer(new String(value,offset,count));
+                }
+            }
+        }
         UserSessionsOutput userSessionsOutput = userSessionsOutputMap.get(sessionId);
         if (userSessionsOutput != null) {
             userSessionsOutput.getSessionOutputMap().get(instanceId).getOutput().append(value, offset, count);

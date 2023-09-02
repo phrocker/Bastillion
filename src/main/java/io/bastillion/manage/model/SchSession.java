@@ -7,6 +7,7 @@ package io.bastillion.manage.model;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.Session;
+import io.bastillion.manage.auditing.Auditor;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,8 @@ public class SchSession {
     InputStream outFromChannel;
     OutputStream inputToChannel;
     HostSystem hostSystem;
+
+    Auditor terminalAuditor;
 
 
     public Session getSession() {
@@ -82,5 +85,13 @@ public class SchSession {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Auditor getTerminalAuditor(){
+        return this.terminalAuditor;
+    }
+
+    public void setTerminalAuditor(Auditor auditor){
+        this.terminalAuditor = auditor;
     }
 }

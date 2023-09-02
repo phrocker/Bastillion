@@ -47,4 +47,5 @@ public class Profile {
     public void setDesc(String desc) {
         this.desc = desc;
     }
+
 }

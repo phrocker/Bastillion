@@ -1,0 +1,109 @@
+<!--/**
+ *    Copyright (C) 2015 Loophole, LLC
+ *
+ *    Licensed under The Prosperity Public License 3.0.0
+ */-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta th:replace="_res/inc/header">
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+
+            //open add dialog
+            $("#assign_rules").button().click(function () {
+                $('#assignRulesToSystem').submit();
+            });
+
+            //select all check boxes
+            $("#assignRulesToSystem_ruleSelectAll").click(function (e) {
+                e.stopImmediatePropagation();
+                if ($(this).is(':checked')) {
+                    $(".ruleSelect").prop('checked', true);
+                } else {
+                    $(".ruleSelect").prop('checked', false);
+                }
+            });
+
+            $(".sort,.sortAsc,.sortDesc").click(function () {
+                var id = $(this).attr('id')
+
+                var orderDirection = $('#viewSystemRules_sortedSet_orderByDirection');
+                if (orderDirection.attr('value') === 'asc') {
+                    orderDirection.attr('value', 'desc');
+                } else {
+                    orderDirection.attr('value', 'asc');
+                }
+
+                $('#viewSystemRules_sortedSet_orderByField').attr('value', id);
+                $("#viewSystemRules").submit();
+
+            });
+            [# th:if= "${!#strings.isEmpty(sortedSet.orderByField)}"]
+                $('#' + [[${sortedSet.orderByField}]]).attr('class', [[${sortedSet.orderByDirection}]]);
+            [/]
+
+        });
+        /*]]>*/
+    </script>
+
+    <title>Bastillion - Assign Rules to System</title>
+</head>
+
+<body>
+<div th:replace="_res/inc/navigation"></div>
+<div class="container">
+    <form id="viewSystemRules" th:action="@{/manage/viewSystemRules.ktrl}"
+          method="get">
+        <input type="hidden" name="_csrf" th:value="${session._csrf}">
+        <input type="hidden" id="viewSystemRules_sortedSet_orderByDirection"
+               name="sortedSet.orderByDirection" th:value="${sortedSet.orderByDirection}">
+        <input type="hidden" id="viewSystemRules_sortedSet_orderByField" name="sortedSet.orderByField"
+               th:value="${sortedSet.orderByField}">
+        <input type="hidden" name="rule.id" th:value="${rule.id}">
+    </form>
+    <h3>Assign Rule to Systems</h3>
+    <p>Select the profiles below to be assigned to the current rule.</p>
+    <h4 th:text="${rule.displayNm}"></h4>
+    <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
+        <form id="assignRulesToSystem" th:action="@{/manage/assignRulesToSystem.ktrl}"
+              method="post">
+            <input type="hidden" name="_csrf" th:value="${session._csrf}">
+            <input type="hidden" name="rule.id" th:value="${rule.id}">
+            <table class="table-striped scrollableTable">
+                <thead>
+                <tr>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@PROFILE_ID}" class="sort">
+                        <input type="checkbox" id="assignRulesToSystem_ruleSelectAll" name="ruleSelectAll"
+                               class="ruleSelect form-check-input" title="Select All">
+                    </th>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_NM}" class="sort">System Name</th>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_DESC}" class="sort">Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template th:each="profile_rule : ${sortedSet.itemList}" th:remove="tag">
+                    <tr>
+                        <td>
+                            <input type="checkbox" th:id="'ruleSelectId_'+ ${profile_rule.id}" name="ruleSelectId"
+                                   class="ruleSelect form-check-input" th:value="${profile_rule.id}" th:checked="${profile_rule.checked}">
+                        </td>
+                        <td th:text="${profile_rule.nm}"></td>
+                        <td th:text="${profile_rule.desc}"></td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+        </form>
+    </div>
+    <div id="assign_rules" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}"
+         class="btn btn-secondary assign_user_btn spacer spacer-bottom">Assign</div>
+    <div class="error" th:if="${sortedSet.itemList == null || sortedSet.itemList.empty}">There are no rules associated with session(<a th:href="' iewRules.ktrl?_csrf=' + ${session._csrf}">Manage Rules</a>).</div>
+</div>
+</body>
+
+</html>

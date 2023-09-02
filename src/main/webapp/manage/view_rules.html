@@ -1,0 +1,365 @@
+<!--/**
+ *    Copyright (C) 2013 Loophole, LLC
+ *
+ *    Licensed under The Prosperity Public License 3.0.0
+ */-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta th:replace="_res/inc/header">
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            $("#view_btn").button().click(function () {
+                $("#viewRules").submit();
+            });
+            $(".refresh_btn").button().click(function () {
+                //get id to submit edit form
+                var id = $(this).attr('id').replace("refresh_btn_", "");
+                $("#save_sys_form_edit_" + id).submit();
+
+            });
+            //call delete action
+            $(".del_btn").button().click(function () {
+                var id = $(this).attr('id').replace("del_btn_", "");
+                window.location = 'deleteSystem.ktrl?rule.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
+                    + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+            //submit add or edit form
+            $(".submit_btn").button().click(function () {
+                $(this).parents('.modal').find('form').submit();
+            });
+
+            $(".sort,.sortAsc,.sortDesc").click(function () {
+                var id = $(this).attr('id');
+
+                var orderDirection = $('#viewRules_sortedSet_orderByDirection');
+                if (orderDirection.attr('value') === 'asc') {
+                    orderDirection.attr('value', 'desc');
+                } else {
+                    orderDirection.attr('value', 'asc');
+                }
+
+                $('#viewRules_sortedSet_orderByField').attr('value', id);
+                $("#viewRules").submit();
+
+            });
+
+            [# th:if= "${!#strings.isEmpty(sortedSet.orderByField)}"]
+                $('#' + [[${sortedSet.orderByField}]]).attr('class', [[${sortedSet.orderByDirection}]]);
+            [/]
+
+        });
+        /*]]>*/
+
+    </script>
+    <script th:inline="javascript" th:if="${!#maps.isEmpty(fieldErrors) || !errors.empty}">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            [# th:if= "${rule.id > 0}"]
+                new bootstrap.Modal($('#edit_dialog_' + [[${rule.id}]]).show();
+            [/]
+
+            [# th:if= "${rule.id <= 0}"]
+                new bootstrap.Modal($("#add_dialog")).show();
+            [/]
+        });
+        /*]]>*/
+
+    </script>
+
+    <title>Bastillion - Manage Rules / Distribute SSH Keys</title>
+</head>
+
+<body>
+<div th:replace="_res/inc/navigation"></div>
+<div class="container">
+    <form id="viewRules" th:action="@{/manage/viewRules.ktrl}" method="get">
+        <input type="hidden" name="_csrf" th:value="${session._csrf}">
+        <input type="hidden" id="viewRules_sortedSet_orderByDirection" name="sortedSet.orderByDirection"
+               th:value="${sortedSet.orderByDirection}">
+        <input type="hidden" id="viewRules_sortedSet_orderByField" name="sortedSet.orderByField"
+               th:value="${sortedSet.orderByField}">
+        <h3>Manage Rules</h3>
+        <p>Add / Delete systems below or distribute SSH keys</p>
+        <div th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
+            <table>
+                <tr>
+                    <td class="align_left">
+                        <select th:name="'sortedSet.filterMap[' + ${@io.bastillion.manage.db.AuditingRulesDB@FILTER_BY_PROFILE_ID} + ']'"
+                                title="Profile" class="form-select view_frm_select">
+                            <option value="">- Select Profile -</option>
+                            <option th:each="p : ${sortedSet.itemList}" th:value="${p.id}"
+                                    th:text="${p.nm}"
+                                    th:selected="${#strings.equals(sortedSet.filterMap.get(@io.bastillion.manage.db.AuditingRulesDB@FILTER_BY_PROFILE_ID), p.id)}"></option>
+                        </select>
+                    </td>
+                    <td>
+                        <div id="view_btn" class="btn btn-secondary">Filter</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+    <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
+        <table class="table-striped scrollableTable">
+            <thead>
+            <tr>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_NAME}" class="sort">Rule Name</th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CLASS}"
+                    class="sort">Rule Class
+                </th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CONFIG}"
+                    class="sort">Rule Config
+                </th>
+                <th>&#xA0;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template th:each="s : ${sortedSet.itemList}" th:remove="tag">
+                <tr>
+                    <td>
+                        <div th:id="'status_' + ${s.id}" th:text="${s.displayNm}"></div>
+                    </td>
+                    <td th:text="${s.ruleClass}"></td>
+                    <td th:text="${s.ruleConfig}"></td>
+                    <td>
+                        <div>
+                            <button th:id="'refresh_btn_' + ${s.id}"
+                                    class="btn btn-secondary refresh_btn spacer spacer-left">
+                                <img src="../img/refresh.png" alt="Refresh" style="float:left;width:20px;height:20px;">
+                            </button>
+                            <button class="btn btn-secondary spacer spacer-middle" data-bs-toggle="modal"
+                                    th:attr="data-bs-target='#edit_dialog_' + ${s.id}">Edit
+                            </button>
+                            <button th:id="'del_btn_' + ${s.id}"
+                                    class="btn btn-secondary del_btn spacer spacer-right">Delete
+                            </button>
+                            <div style="clear:both"></div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-secondary add_btn spacer spacer-bottom"  data-bs-toggle="modal"
+            data-bs-target="#add_dialog">Add Rule
+    </button>
+    <div id="add_dialog" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add System</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div th:replace="_res/inc/errors"></div>
+                        <form th:action="@{/manage/saveRule.ktrl}" method="post" class="save_sys_form_add"
+                              autocomplete="off">
+                            <input type="hidden" name="_csrf" th:value="${session._csrf}">
+                            <table>
+                                <tr>
+                                    <td>Display Name
+                                    </td>
+                                    <td>
+                                        <input type="text" name="rule.displayNm"
+                                               th:value="${rule.displayNm}"
+                                               class="form-control" title="Rule Name" size="10"> <span class="error"
+                                                                                     th:text="${fieldErrors.get('rule.displayNm')}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>System User
+                                    </td>
+                                    <td>
+                                        <input type="text" name="rule.ruleClass" th:value="${rule.ruleClass}"
+                                               class="form-control" title="Rule Class" size="18"> <span class="error"
+                                                                                    th:text="${fieldErrors.get('rule.ruleClass')}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Host
+                                    </td>
+                                    <td>
+                                        <input type="text" name="rule.ruleConfig" th:value="${rule.ruleConfig}"
+                                               class="form-control" title="Rule Config" size="18"> <span class="error"
+                                                                             th:text="${fieldErrors.get('rule.ruleConfig')}"></span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary submit_btn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template th:each="s: ${sortedSet.itemList}" th:remove="tag">
+        <div th:id="'edit_dialog_' + ${s.id}" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit System</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div th:replace="_res/inc/errors"></div>
+                            <form th:action="@{/manage/saveRule.ktrl}" method="post"
+                                  th:id="'save_sys_form_edit_' + ${s.id}">
+                                <input type="hidden" name="_csrf" th:value="${session._csrf}">
+                                <table>
+                                    <tr>
+                                        <td>Display Name
+                                        </td>
+                                        <td>
+                                            <input type="text" name="rule.displayNm" th:value="${s.displayNm}"
+                                                   class="form-control" title="Display Name" size="10"> <span class="error"
+                                                                                         th:text="${fieldErrors.get('rule.displayNm')}"></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>System User
+                                        </td>
+                                        <td>
+                                            <input type="text" name="rule.ruleClass" th:value="${s.ruleClass}"
+                                                   class="form-control" title="System User"
+                                                   size="10"> <span class="error"
+                                                                    th:text="${fieldErrors.get('rule.ruleClass')}"></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Host
+                                        </td>
+                                        <td>
+                                            <input type="text" name="rule.ruleConfig" th:value="${s.ruleConfig}" class="form-control" title="Host"
+                                                   size="18"> <span class="error"
+                                                                    th:text="${fieldErrors.get('rule.ruleConfig')}"></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary submit_btn">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <div id="set_password_dialog" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" th:text="'Enter password for ' + ${rule.displayNm}"></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="error" th:text="'Error: ' + ${rule.errorMsg}"></div>
+                        <form th:action="@{/manage/saveRule.ktrl}" method="post" id="password_frm">
+                            <input type="hidden" name="_csrf" th:value="${session._csrf}">
+                            <input type="hidden" name="rule.id" th:value="${rule.id}">
+                            <input type="hidden" name="rule.displayNm" th:value="${rule.displayNm}">
+                            <input type="hidden" name="rule.ruleClass" th:value="${rule.ruleClass}">
+                            <input type="hidden" name="rule.ruleConfig" th:value="${rule.ruleConfig}">
+                            <input type="hidden" name="sortedSet.orderByDirection"
+                                   th:value="${sortedSet.orderByDirection}">
+                            <input type="hidden" name="sortedSet.orderByField" th:value="${sortedSet.orderByField}">
+                            <table>
+                                <tr>
+                                    <td>Password
+                                    </td>
+                                    <td>
+                                        <input type="password" name="password" class="form-control" title="Password" size="15" value=""
+                                               autocomplete="off">
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary submit_btn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="set_passphrase_dialog" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title"
+                        th:text="'Enter passphrase for : ' + ${rule.displayNm}"></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="error" th:text="'Error: ' + ${rule.errorMsg}"></div>
+                        <form th:action="@{/manage/saveSystem.ktrl}" method="post" id="passphrase_frm">
+                            <input type="hidden" name="_csrf" th:value="${session._csrf}">
+                            <input type="hidden" name="rule.id" th:value="${rule.id}">
+                            <input type="hidden" name="rule.displayNm" th:value="${rule.displayNm}">
+                            <input type="hidden" name="rule.ruleClass" th:value="${rule.ruleClass}">
+                            <input type="hidden" name="rule.ruleConfig" th:value="${rule.ruleConfig}">
+                            <input type="hidden" name="sortedSet.orderByDirection"
+                                   th:value="${sortedSet.orderByDirection}">
+                            <input type="hidden" name="sortedSet.orderByField" th:value="${sortedSet.orderByField}">
+                            <table>
+                                <tr>
+                                    <td>Passphrase
+                                    </td>
+                                    <td>
+                                        <input type="password" name="passphrase" class="form-control" title="Passphrase" size="15"
+                                               value="" autocomplete="off">
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary submit_btn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="error_dialog" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" th:text="'System: ' + ${rule.displayNm}"></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="error" th:text="'Error: ' + ${rule.errorMsg}"></div>
+                        <form id="error_frm">
+                            <input type="hidden" name="_csrf" th:value="${session._csrf}">
+                            <input type="hidden" name="rule.id" th:value="${rule.id}">
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary submit_btn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

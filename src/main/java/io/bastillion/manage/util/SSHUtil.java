@@ -15,6 +15,7 @@ import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import io.bastillion.common.util.AppConfig;
+import io.bastillion.manage.auditing.Auditor;
 import io.bastillion.manage.db.PrivateKeyDB;
 import io.bastillion.manage.db.ProfileSystemsDB;
 import io.bastillion.manage.db.PublicKeyDB;
@@ -494,6 +495,7 @@ public class SSHUtil {
             schSession.setInputToChannel(inputToChannel);
             schSession.setOutFromChannel(outFromChannel);
             schSession.setHostSystem(hostSystem);
+            schSession.setTerminalAuditor(new Auditor(userId,sessionId));
 
             //refresh keys for session
             addPubKey(hostSystem, session, appKey.getPublicKey());
