@@ -63,6 +63,8 @@
                         url: '../admin/disconnectTerm.ktrl?id=' + id + '&_csrf=' + [[${session._csrf}]],
                         cache: false
                     });
+
+
                     $('#run_cmd_' + id).remove();
                     termMap[id].dispose();
                     delete termMap[id];
@@ -262,17 +264,25 @@
             // Log messages from the server
             connection.onmessage = function (e) {
                 var json = jQuery.parseJSON(e.data);
-                $.each(json, function (key, val) {
-                    if (val.output != '') {
-                        if (!termMap[val.instanceId]) {
-                            createTermMap(val.instanceId, val.output);
-                            resetSize();
-                        } else {
-                            termMap[val.instanceId].write(val.output);
+                console.log(json);
+                if ($.isArray(json)) {
+                    $.each(json, function (key, val) {
+                        if (val.output != '') {
+                            if (!termMap[val.instanceId]) {
+                                createTermMap(val.instanceId, val.output);
+                                resetSize();
+                            } else {
+                                termMap[val.instanceId].write(val.output);
+                            }
                         }
-                    }
 
-                });
+                    });
+                    document.getElementById("alertWarn").innerHTML = "";
+                }else{
+                    if (json.hasOwnProperty("action")){
+                        document.getElementById("alertWarn").innerHTML = json.description;
+                    }
+                }
             };
 
             function createTermMap(id, output) {
@@ -460,6 +470,18 @@
         }
         .term {
             background: [[${userSettings.bg}]];
+        }
+
+        .bottom {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #ccc;
+            color: #fff
+        }
+
+        .scroll {
+            min-height: 1500px;
         }
 
     </style>
@@ -677,6 +699,9 @@
     <input type="hidden" name="pendingSystemStatus.id" th:value="${pendingSystemStatus.id}">
     <input type="hidden" name="script.id" th:if="${script != null}" th:value="${script.id}">
 </form>
+<div class="bottom" id="alertWarn">
+    bottom
+</div>
 </body>
 
 </html>

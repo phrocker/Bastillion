@@ -214,55 +214,6 @@ public class ProfileDB {
         DBUtils.closeConn(con);
     }
 
-    public static SortedSet getProfilesForRule(SortedSet sortedSet, Long ruleId) throws SQLException, GeneralSecurityException {
 
-        List<ProfileRule> profileRules = new ArrayList<>();
-        // get the list of all profiles
-        List<Profile> profiles = getAllProfiles();
-
-        Rule rule = AuditingRulesDB.getRule(ruleId);
-
-        Connection con = DBUtils.getConn();
-
-        for(Profile profile : profiles){
-
-            /***
-             * SELECT *
-             * FROM Movies
-             * LEFT JOIN Movie_Links
-             * ON Movies.ID = Movie_Links.movie_id;
-             */
-            String sql = "select id from profile_rules pr where pr.profile_id = ? and pr.rule_id = ?";
-
-            PreparedStatement stmt = con.prepareStatement(sql);
-            stmt.setLong(1, profile.getId());
-            stmt.setLong(2, ruleId);
-            ResultSet rs = stmt.executeQuery();
-            ProfileRule pr = new ProfileRule();
-            while (rs.next()) {
-
-                pr.setChecked(true);
-
-                break;
-
-            }
-            List<Rule> ruleList = new ArrayList<>();
-            ruleList.add(rule);
-            pr.setRuleList(ruleList);
-            pr.setDesc(profile.getDesc());
-            pr.setId(profile.getId());
-            pr.setNm(profile.getNm());
-            profileRules.add(pr);
-            DBUtils.closeRs(rs);
-            DBUtils.closeStmt(stmt);
-        }
-
-
-
-        DBUtils.closeConn(con);
-
-        sortedSet.setItemList(profileRules);
-        return sortedSet;
-    }
 
 }

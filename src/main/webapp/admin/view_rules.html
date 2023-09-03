@@ -111,10 +111,10 @@
                         </td>
                         <td th:text="${s.displayNm}"></td>
                         <td th:text="${s.ruleClass}"></td>
-                        <td><a th:href="'/manage/viewProfileRules.ktrl?rule.id=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
+                        <td><a th:href="'/manage/viewSystemRules.ktrl?rule.id=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
 
                             <button th:id="'role_btn_' + ${s.id}"
-                                    class="btn btn-secondary edit_btn spacer spacer-left">Assign Profiles
+                                    class="btn btn-secondary edit_btn spacer spacer-left">Assign Systems
 
                             </button>
                         </a></td>

@@ -6,6 +6,10 @@
 package io.bastillion.manage.db;
 
 import io.bastillion.manage.model.HostSystem;
+import io.bastillion.manage.model.HostSystemRule;
+import io.bastillion.manage.model.Profile;
+import io.bastillion.manage.model.ProfileRule;
+import io.bastillion.manage.model.Rule;
 import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.util.DBUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -452,4 +456,55 @@ public class SystemDB {
         return systemIdList;
     }
 
+    public static SortedSet getSystemsForRule(SortedSet sortedSet, Long ruleId) throws SQLException, GeneralSecurityException {
+
+        List<HostSystemRule> hostRules = new ArrayList<>();
+        // get the list of all profiles
+        List<HostSystem> profiles = getAllSystems();
+
+        Rule rule = AuditingRulesDB.getRule(ruleId);
+
+        Connection con = DBUtils.getConn();
+
+        for(HostSystem hostSystem : profiles){
+
+            /***
+             * SELECT *
+             * FROM Movies
+             * LEFT JOIN Movie_Links
+             * ON Movies.ID = Movie_Links.movie_id;
+             */
+            String sql = "select id from system_rules pr where pr.system_id = ? and pr.rule_id = ?";
+
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setLong(1, hostSystem.getId());
+            stmt.setLong(2, ruleId);
+            ResultSet rs = stmt.executeQuery();
+            HostSystemRule pr = new HostSystemRule();
+            while (rs.next()) {
+
+                pr.setChecked(true);
+
+                break;
+
+            }
+            List<Rule> ruleList = new ArrayList<>();
+            ruleList.add(rule);
+            pr.setRuleList(ruleList);
+            pr.setHost(hostSystem.getHost());
+            pr.setId(hostSystem.getId());
+            pr.setDisplayNm(hostSystem.getDisplayNm());
+            pr.setUser(hostSystem.getUser());
+            hostRules.add(pr);
+            DBUtils.closeRs(rs);
+            DBUtils.closeStmt(stmt);
+        }
+
+
+
+        DBUtils.closeConn(con);
+
+        sortedSet.setItemList(hostRules);
+        return sortedSet;
+    }
 }

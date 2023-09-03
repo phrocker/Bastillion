@@ -6,6 +6,8 @@
 package io.bastillion.manage.task;
 
 import com.google.gson.Gson;
+import io.bastillion.manage.auditing.ShellAuditable;
+import io.bastillion.manage.auditing.rules.Trigger;
 import io.bastillion.manage.model.SessionOutput;
 import io.bastillion.manage.model.User;
 import io.bastillion.manage.util.DBUtils;
@@ -19,6 +21,7 @@ import java.security.GeneralSecurityException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * class to send output to web socket client
@@ -48,9 +51,15 @@ public class SentOutputTask implements Runnable {
                     //send json to session
                     this.session.getBasicRemote().sendText(json);
                 }
+                Trigger nextWarn = ShellAuditable.getNextWarning();
+                if (null != nextWarn){
+                    String json = gson.toJson(nextWarn);
+                    this.session.getBasicRemote().sendText(json);
+                }
                 Thread.sleep(25);
                 DBUtils.closeConn(con);
-            } catch (SQLException | GeneralSecurityException | IOException | InterruptedException ex) {
+            } catch (SQLException | GeneralSecurityException | IOException | InterruptedException |
+                     NoSuchElementException ex) {
                 log.error(ex.toString(), ex);
             }
         }

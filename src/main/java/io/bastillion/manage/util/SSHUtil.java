@@ -16,6 +16,8 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.manage.auditing.Auditor;
+import io.bastillion.manage.auditing.RuleAlertAuditor;
+import io.bastillion.manage.db.AuditingRulesDB;
 import io.bastillion.manage.db.PrivateKeyDB;
 import io.bastillion.manage.db.ProfileSystemsDB;
 import io.bastillion.manage.db.PublicKeyDB;
@@ -25,6 +27,7 @@ import io.bastillion.manage.db.UserProfileDB;
 import io.bastillion.manage.model.ApplicationKey;
 import io.bastillion.manage.model.HostSystem;
 import io.bastillion.manage.model.Profile;
+import io.bastillion.manage.model.Rule;
 import io.bastillion.manage.model.SchSession;
 import io.bastillion.manage.model.SessionOutput;
 import io.bastillion.manage.model.UserSchSessions;
@@ -43,6 +46,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -495,13 +499,17 @@ public class SSHUtil {
             schSession.setInputToChannel(inputToChannel);
             schSession.setOutFromChannel(outFromChannel);
             schSession.setHostSystem(hostSystem);
-            schSession.setTerminalAuditor(new Auditor(userId,sessionId));
+            List<Rule> rules = AuditingRulesDB.getSystemRules( hostSystem.getId() );
+            RuleAlertAuditor terminalAuditor = new RuleAlertAuditor(userId,sessionId);
+            terminalAuditor.setRules(rules);
+            schSession.setTerminalAuditor(terminalAuditor);
 
             //refresh keys for session
             addPubKey(hostSystem, session, appKey.getPublicKey());
 
 
-        } catch (JSchException | IOException | GeneralSecurityException ex) {
+        } catch (JSchException | IOException | GeneralSecurityException | ClassNotFoundException |
+                 NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException ex) {
             log.info(ex.toString(), ex);
             hostSystem.setErrorMsg(ex.getMessage());
             if (ex.getMessage().toLowerCase().contains("userauth fail")) {

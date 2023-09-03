@@ -112,6 +112,40 @@ public class AuditingRulesDB {
         return rule;
     }
 
+    /**
+     * method to do order by based on the sorted set object for systems for user
+     *
+     * @param systemId system Id
+     * @return rule if ruleId is valid
+     */
+    public static List<Rule> getSystemRules(Long systemId) throws SQLException, GeneralSecurityException {
+
+        String orderBy = "";
+        String sql = "select r.* from rules r join system_rules s on r.id=s.rule_id where s.system_id=?";
+//String sql = "select s.*, m.profile_id from  system s left join system_map  m on m.system_id = s.id and m.profile_id = ? " + orderBy;
+        //get user for auth token
+        List<Rule> rules = new ArrayList<>();
+        Connection con = DBUtils.getConn();
+        PreparedStatement stmt = con.prepareStatement(sql);
+        stmt.setLong(1, systemId);
+
+        ResultSet rs = stmt.executeQuery();
+        Rule rule = new Rule();
+        while (rs.next()) {
+            Rule dbRule = new Rule();
+            dbRule.setId(rs.getLong("id"));
+            dbRule.setDisplayNm(rs.getString("ruleName"));
+            dbRule.setRuleClass(rs.getString("ruleClass"));
+            dbRule.setRuleConfig(rs.getString("ruleConfig"));
+            rules.add(dbRule);
+        }
+        DBUtils.closeRs(rs);
+        DBUtils.closeStmt(stmt);
+        DBUtils.closeConn(con);
+
+        return rules;
+    }
+
 
 
 
@@ -213,7 +247,7 @@ public class AuditingRulesDB {
         DBUtils.closeStmt(stmt);
 
         for (Long systemId : systemIds) {
-            stmt = con.prepareStatement("insert into profile_rules (rule_id, profile_id) values (?,?)");
+            stmt = con.prepareStatement("insert into system_rules (rule_id, system_id) values (?,?)");
             stmt.setLong(1, ruleId);
             stmt.setLong(2, systemId);
             stmt.execute();

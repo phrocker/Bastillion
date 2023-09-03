@@ -1,8 +1,19 @@
 package io.bastillion.manage.auditing;
 
-import io.bastillion.manage.model.SchSession;
+import io.bastillion.manage.auditing.rules.Trigger;
 
-public interface ShellAuditable {
+import java.util.concurrent.ConcurrentLinkedDeque;
 
-    boolean onMessage(SchSession session, String message);
+public class ShellAuditable {
+
+    static ConcurrentLinkedDeque<Trigger> warn = new ConcurrentLinkedDeque<>();
+
+
+    public static void addWarning(Trigger trigger){
+        warn.add(trigger);
+    }
+
+    public static Trigger getNextWarning(){
+        return warn.isEmpty() ? null : warn.pop();
+    }
 }

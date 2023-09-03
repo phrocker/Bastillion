@@ -67,7 +67,7 @@
         <input type="hidden" name="rule.id" th:value="${rule.id}">
     </form>
     <h3>Assign Rule to Systems</h3>
-    <p>Select the profiles below to be assigned to the current rule.</p>
+    <p>Select the systems below to be assigned to the current rule.</p>
     <h4 th:text="${rule.displayNm}"></h4>
     <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
         <form id="assignRulesToSystem" th:action="@{/manage/assignRulesToSystem.ktrl}"
@@ -81,19 +81,21 @@
                         <input type="checkbox" id="assignRulesToSystem_ruleSelectAll" name="ruleSelectAll"
                                class="ruleSelect form-check-input" title="Select All">
                     </th>
-                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_NM}" class="sort">System Name</th>
-                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_DESC}" class="sort">Description</th>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_NAME}" class="sort">System Name</th>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_HOST}" class="sort">Host</th>
+                    <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_USER}" class="sort">User</th>
                 </tr>
                 </thead>
                 <tbody>
-                <template th:each="profile_rule : ${sortedSet.itemList}" th:remove="tag">
+                <template th:each="system_rule : ${sortedSet.itemList}" th:remove="tag">
                     <tr>
                         <td>
-                            <input type="checkbox" th:id="'ruleSelectId_'+ ${profile_rule.id}" name="ruleSelectId"
-                                   class="ruleSelect form-check-input" th:value="${profile_rule.id}" th:checked="${profile_rule.checked}">
+                            <input type="checkbox" th:id="'ruleSelectId_'+ ${system_rule.id}" name="ruleSelectId"
+                                   class="ruleSelect form-check-input" th:value="${system_rule.id}" th:checked="${system_rule.checked}">
                         </td>
-                        <td th:text="${profile_rule.nm}"></td>
-                        <td th:text="${profile_rule.desc}"></td>
+                        <td th:text="${system_rule.displayNm}"></td>
+                        <td th:text="${system_rule.host}"></td>
+                        <td th:text="${system_rule.user}"></td>
                     </tr>
                 </template>
                 </tbody>

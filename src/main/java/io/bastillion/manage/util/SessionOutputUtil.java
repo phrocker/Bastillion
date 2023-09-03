@@ -8,6 +8,7 @@ package io.bastillion.manage.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.bastillion.common.util.AppConfig;
+import io.bastillion.manage.auditing.rules.Trigger;
 import io.bastillion.manage.control.SecureShellKtrl;
 import io.bastillion.manage.db.SessionAuditDB;
 import io.bastillion.manage.model.AuditWrapper;
@@ -32,7 +33,7 @@ public class SessionOutputUtil {
 
     private static final Map<Long, UserSessionsOutput> userSessionsOutputMap = new ConcurrentHashMap<>();
     public final static boolean enableInternalAudit = "true".equals(AppConfig.getProperty("enableInternalAudit"));
-    private static final Gson gson = new GsonBuilder().registerTypeAdapter(AuditWrapper.class, new SessionOutputSerializer()).create();
+    private static final Gson gson = new GsonBuilder().registerTypeAdapter(AuditWrapper.class, new SessionOutputSerializer()).registerTypeAdapter(Trigger.class,new TriggerSerializer()).create();
     private static final Logger systemAuditLogger = LoggerFactory.getLogger("io.bastillion.manage.util.SystemAudit");
 
     private SessionOutputUtil() {

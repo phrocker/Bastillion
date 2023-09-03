@@ -1,5 +1,11 @@
 package io.bastillion.manage.auditing;
 
+import io.bastillion.manage.auditing.rules.AuditorRule;
+import io.bastillion.manage.model.Rule;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BaseAuditor {
@@ -24,7 +30,11 @@ public abstract class BaseAuditor {
 
     public synchronized  String append(String strToAppend){
         this.builder.append(strToAppend);
-        onPartial();
+        try {
+            onPartial();
+        }catch(Exception e){
+
+        }
         return this.builder.toString();
     }
 
@@ -65,9 +75,12 @@ public abstract class BaseAuditor {
                 break;
             case 13:
                 System.out.println("on message " + get().toString());
+                clear();
             default:
                 break;
 
         }
     }
+
+
 }

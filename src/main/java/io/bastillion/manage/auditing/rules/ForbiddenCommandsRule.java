@@ -1,19 +1,17 @@
 package io.bastillion.manage.auditing.rules;
 
-import org.thymeleaf.expression.Lists;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 public class ForbiddenCommandsRule implements AuditorRule{
     @Override
-    public List<TriggerAction> trigger(String text) {
-        ArrayList<TriggerAction> lst = new ArrayList<>();
-        if (text.startsWith("rm -rf")){
-            lst.add( TriggerAction.WARN_ACTION );
+    public Optional<Trigger> trigger(String text) {
+        System.out.println("checking " + text);
+        if (text.startsWith("rm -r")){
+            System.out.println("ahhhh");
+            return Optional.of(new Trigger(TriggerAction.WARN_ACTION, "rm -rf can cause irreperable harm. please use cautiously" ));
         }
 
-        return lst;
 
+        return Optional.empty();
     }
 }

@@ -8,6 +8,7 @@ package io.bastillion.manage.control;
 import io.bastillion.common.util.AuthUtil;
 import io.bastillion.manage.db.AuditingRulesDB;
 import io.bastillion.manage.db.ProfileDB;
+import io.bastillion.manage.db.SystemDB;
 import io.bastillion.manage.db.UserDB;
 import io.bastillion.manage.db.UserProfileDB;
 import io.bastillion.manage.model.HostSystem;
@@ -93,19 +94,19 @@ public class AuditingRulesKtrl extends BaseKontroller {
         return retVal;
     }
 
-    @Kontrol(path = "/manage/viewProfileRules", method = MethodType.GET)
+    @Kontrol(path = "/manage/viewSystemRules", method = MethodType.GET)
     public String viewProfileUsers() throws ServletException {
         if (rule != null && rule.getId() != null) {
             try {
                 rule = AuditingRulesDB.getRule(rule.getId());
-                sortedSet = ProfileDB.getProfilesForRule(sortedSet, rule.getId());
+                sortedSet = SystemDB.getSystemsForRule(sortedSet, rule.getId());
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
                 throw new ServletException(ex.toString(), ex);
             }
 
         }
-        return "/manage/view_profile_rules.html";
+        return "/manage/view_system_rules.html";
     }
 
     @Kontrol(path = "/manage/assignRulesToSystem", method = MethodType.POST)
@@ -113,12 +114,12 @@ public class AuditingRulesKtrl extends BaseKontroller {
 
         if (ruleSelectId != null) {
             try {
-                AuditingRulesDB.setRuleProfiles(rule.getId(), ruleSelectId);
+                AuditingRulesDB.setRuleSystems(rule.getId(), ruleSelectId);
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
                 throw new ServletException(ex.toString(), ex);
             }
         }
-        return "redirect:/manage/viewProfileRules.ktrl?rule.id=" + rule.getId();
+        return "redirect:/manage/viewSystemRules.ktrl?rule.id=" + rule.getId();
     }
 }
