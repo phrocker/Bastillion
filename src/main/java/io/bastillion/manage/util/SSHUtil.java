@@ -464,7 +464,8 @@ public class SSHUtil {
             if (password != null && !password.trim().equals("")) {
                 session.setPassword(password);
             }
-            session.setConfig("StrictHostKeyChecking", "no");
+          //  session.setConfig("StrictHostKeyChecking", "no");
+            jsch.setKnownHosts(System.getProperty("user.home")+"/.ssh/known_hosts");
             session.setConfig("PreferredAuthentications", "publickey,keyboard-interactive,password");
             session.setServerAliveInterval(SERVER_ALIVE_INTERVAL);
             session.connect(SESSION_TIMEOUT);

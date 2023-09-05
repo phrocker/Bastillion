@@ -317,14 +317,25 @@
                     [/]
                     };
 
-                termMap[id] = new Terminal({
-                    fontSize: 14,
-                    'theme': CUSTOM_THEME,
-                    'cursorStyle' : 'bar',
-                    'cursorWidth' : '10',
-                    'cursorInactiveStyle' : 'bar',
-                    fontFamily: 'DejaVu Sans Mono, Liberation Mono, monospace'
-                });
+                //fontSize: 16,
+                    //'theme': CUSTOM_THEME,
+                    //'cursorStyle' : 'bar',
+                    //'cursorWidth' : '12',
+                    //'cursorInactiveStyle' : 'bar',
+                    //fontFamily: 'DejaVu Sans Mono, Liberation Mono, monospace'
+
+                termOptions = {
+                    cursorBlink: true,
+                    theme: {
+                        background:  'black',
+                        foreground: 'white',
+                        cursor:  'white',
+                        fontFamily: 'DejaVu Sans Mono, Liberation Mono, monospace',
+                        fontSize: 20
+                    }
+                }
+
+                termMap[id] = new Terminal(termOptions);
 
                 fitMap[id] = new FitAddon.FitAddon()
                 termMap[id].loadAddon(fitMap[id])
