@@ -140,8 +140,8 @@ public class AuthKeysKtrl extends BaseKontroller {
     public String adminViewKeys() throws ServletException {
 
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
-            String userType = AuthUtil.getUserType(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
+            String userType = AuthUtil.getUserType(getRequest());
             if (Auth.MANAGER.equals(userType)) {
                 profileList = ProfileDB.getAllProfiles();
             } else {
@@ -161,8 +161,8 @@ public class AuthKeysKtrl extends BaseKontroller {
     @Kontrol(path = "/admin/savePublicKey", method = MethodType.POST)
     public String savePublicKeys() throws ServletException {
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
-            String userType = AuthUtil.getUserType(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
+            String userType = AuthUtil.getUserType(getRequest());
 
             publicKey.setUserId(userId);
             if (Auth.MANAGER.equals(userType) || UserProfileDB.checkIsUsersProfile(userId, publicKey.getProfile().getId())) {
@@ -188,7 +188,7 @@ public class AuthKeysKtrl extends BaseKontroller {
             try {
                 //get public key then delete
                 publicKey = PublicKeyDB.getPublicKey(publicKey.getId());
-                PublicKeyDB.deletePublicKey(publicKey.getId(), AuthUtil.getUserId(getRequest().getSession()));
+                PublicKeyDB.deletePublicKey(publicKey.getId(), AuthUtil.getUserId(getRequest()));
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
                 throw new ServletException(ex.toString(), ex);
@@ -205,7 +205,7 @@ public class AuthKeysKtrl extends BaseKontroller {
 
         String privateKey = null;
         try {
-            privateKey = EncryptionUtil.decrypt((String) getRequest().getSession().getAttribute(PVT_KEY));
+            privateKey = EncryptionUtil.decrypt((String) getRequest().getAttribute(PVT_KEY));
         } catch (GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -226,8 +226,8 @@ public class AuthKeysKtrl extends BaseKontroller {
 
         }
         //remove pvt key
-        getRequest().getSession().setAttribute(PVT_KEY, null);
-        getRequest().getSession().removeAttribute(PVT_KEY);
+        getRequest().setAttribute(PVT_KEY, null);
+        getRequest().removeAttribute(PVT_KEY);
 
         return null;
     }
@@ -260,7 +260,7 @@ public class AuthKeysKtrl extends BaseKontroller {
             keyPair.writePrivateKey(os, publicKey.getPassphrase().getBytes());
             //set private key
             try {
-                getRequest().getSession().setAttribute(PVT_KEY, EncryptionUtil.encrypt(os.toString()));
+                getRequest().setAttribute(PVT_KEY, EncryptionUtil.encrypt(os.toString()));
             } catch (GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
                 throw new ServletException(ex.toString(), ex);
@@ -288,7 +288,7 @@ public class AuthKeysKtrl extends BaseKontroller {
 
         Long userId = null;
         try {
-            userId = AuthUtil.getUserId(getRequest().getSession());
+            userId = AuthUtil.getUserId(getRequest());
         } catch (GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -340,7 +340,7 @@ public class AuthKeysKtrl extends BaseKontroller {
 
             if (!this.getFieldErrors().isEmpty()) {
 
-                String userType = AuthUtil.getUserType(getRequest().getSession());
+                String userType = AuthUtil.getUserType(getRequest());
 
                 if (Auth.MANAGER.equals(userType)) {
                     profileList = ProfileDB.getAllProfiles();

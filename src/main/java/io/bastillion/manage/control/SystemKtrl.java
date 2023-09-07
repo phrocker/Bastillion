@@ -57,8 +57,8 @@ public class SystemKtrl extends BaseKontroller {
     public String viewAdminSystems() throws ServletException {
 
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
-            if (Auth.MANAGER.equals(AuthUtil.getUserType(getRequest().getSession()))) {
+            Long userId = AuthUtil.getUserId(getRequest());
+            if (Auth.MANAGER.equals(AuthUtil.getUserType(getRequest()))) {
                 sortedSet = SystemDB.getSystemSet(sortedSet);
                 profileList = ProfileDB.getAllProfiles();
             } else {

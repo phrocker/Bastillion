@@ -54,7 +54,7 @@ public class AuditingRulesKtrl extends BaseKontroller {
     @Kontrol(path = "/admin/ruleSettings", method = MethodType.GET)
     public String viewAdminSystems() throws ServletException, GeneralSecurityException, SQLException {
 
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
             sortedSet = AuditingRulesDB.getRules(sortedSet);
 
         return "/admin/view_rules.html";
@@ -81,6 +81,26 @@ public class AuditingRulesKtrl extends BaseKontroller {
                 AuditingRulesDB.updateRule(rule);
             } else {
                 rule.setId(AuditingRulesDB.insertRule(rule));
+            }
+            sortedSet = AuditingRulesDB.getRules(sortedSet);
+        } catch (SQLException | GeneralSecurityException ex) {
+            log.error(ex.toString(), ex);
+            throw new ServletException(ex.toString(), ex);
+        }
+
+
+        retVal = "/manage/view_rules.html";
+
+        return retVal;
+    }
+
+    @Kontrol(path = "/manage/deleteRule", method = MethodType.GET)
+    public String deleteRule() throws ServletException {
+        String retVal = "redirect:/manage/viewRules.ktrl?sortedSet.orderByDirection=" + sortedSet.getOrderByDirection() + "&sortedSet.orderByField=" + sortedSet.getOrderByField();
+
+        try {
+            if (rule.getId() != null) {
+                AuditingRulesDB.deleteRule(rule);
             }
             sortedSet = AuditingRulesDB.getRules(sortedSet);
         } catch (SQLException | GeneralSecurityException ex) {

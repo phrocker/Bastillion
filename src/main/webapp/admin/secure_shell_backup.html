@@ -13,8 +13,6 @@
 
         $(document).ready(function () {
 
-            style = {};
-
             $.ajaxSetup({cache: false, async:false});
 
             //get instance id list from selected terminals
@@ -32,22 +30,28 @@
                 $("#upload_push_frame").attr("src", "");
             });
 
+            $(".termwrapper").sortable({
+                connectWith: ".run_cmd",
+                handle: ".term-header",
+                zIndex: 10000,
+                helper: 'clone'
+            });
 
             //submit
             $(".submit_btn").button().click(function () {
                 [# th:if= "${pendingSystemStatus != null && pendingSystemStatus.id != null}"]
-                $(this).parents('.modal').find('form').submit();
+                    $(this).parents('.modal').find('form').submit();
                 [/]
-                    $(this).parents('.modal').modal('hide');
+                $(this).parents('.modal').modal('hide');
             });
 
             //close all forms
             $(".cancel_btn").button().click(function () {
                 window.location = 'getNextPendingSystemForTerms.ktrl?pendingSystemStatus.id=' + /*[[${pendingSystemStatus.id}]]*/ ''
                     [# th:if= "${script != null && script.id > 0}"]
-                +'&script.id=' + /*[[${script.id}]]*/ ''
+                        +'&script.id=' + /*[[${script.id}]]*/ ''
                     [/]
-                + '&_csrf=' + [[${session._csrf}]];
+                    + '&_csrf=' + [[${session._csrf}]];
             });
 
             //disconnect terminals and remove from view
@@ -59,6 +63,8 @@
                         url: '../admin/disconnectTerm.ktrl?id=' + id + '&_csrf=' + [[${session._csrf}]],
                         cache: false
                     });
+
+
                     $('#run_cmd_' + id).remove();
                     termMap[id].dispose();
                     delete termMap[id];
@@ -94,24 +100,23 @@
             });
 
             [# th:if= "${currentSystemStatus != null && (#strings.equals(currentSystemStatus.statusCd, 'GENERICFAIL') || #strings.equals(currentSystemStatus.statusCd, 'HOSTFAIL'))}"]
-            new bootstrap.Modal($("#error_dialog")).show();
+                new bootstrap.Modal($("#error_dialog")).show();
             [/]
-                [# th:if= "${pendingSystemStatus != null && pendingSystemStatus.id != null && (currentSystemStatus == null || (!#strings.equals(currentSystemStatus.statusCd, 'GENERICFAIL') && !#strings.equals(currentSystemStatus.statusCd, 'HOSTFAIL')) )}"]
-            [# th:if= "${ #strings.equals(pendingSystemStatus.statusCd, 'AUTHFAIL')}"]
-            new bootstrap.Modal($("#set_password_dialog")).show();
-            [/]
-
-                [# th:if= "${#strings.equals(pendingSystemStatus.statusCd, 'KEYAUTHFAIL')}"]
-            new bootstrap.Modal($("#set_passphrase_dialog")).show();
-            [/]
-
-                [# th:if= "${currentSystemStatus == null || (!#strings.equals(pendingSystemStatus.statusCd, 'AUTHFAIL') && !#strings.equals(pendingSystemStatus.statusCd, 'KEYAUTHFAIL')&& !#strings.equals(pendingSystemStatus.statusCd, 'GENERICFAIL'))}"]
-            //$("#composite_terms_frm").submit();
-                console.log("wuuu");
-            [/]
+            [# th:if= "${pendingSystemStatus != null && pendingSystemStatus.id != null && (currentSystemStatus == null || (!#strings.equals(currentSystemStatus.statusCd, 'GENERICFAIL') && !#strings.equals(currentSystemStatus.statusCd, 'HOSTFAIL')) )}"]
+                [# th:if= "${ #strings.equals(pendingSystemStatus.statusCd, 'AUTHFAIL')}"]
+                    new bootstrap.Modal($("#set_password_dialog")).show();
                 [/]
 
-                [# th:if= "${pendingSystemStatus == null || pendingSystemStatus.id == null}"]
+                [# th:if= "${#strings.equals(pendingSystemStatus.statusCd, 'KEYAUTHFAIL')}"]
+                    new bootstrap.Modal($("#set_passphrase_dialog")).show();
+                [/]
+
+                [# th:if= "${currentSystemStatus == null || (!#strings.equals(pendingSystemStatus.statusCd, 'AUTHFAIL') && !#strings.equals(pendingSystemStatus.statusCd, 'KEYAUTHFAIL')&& !#strings.equals(pendingSystemStatus.statusCd, 'GENERICFAIL'))}"]
+                    $("#composite_terms_frm").submit();
+                [/]
+            [/]
+
+            [# th:if= "${pendingSystemStatus == null || pendingSystemStatus.id == null}"]
 
             $('#dummy').focus();
             var keys = {};
@@ -203,96 +208,27 @@
             function resetSize() {
                 var ids = getActiveTermsInstanceIds();
                 for (var i = 0; i < ids.length; i++) {
-                    var w = Math.max(document.documentElement.clientHeight, window.innerWidth || 0);
-                    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-                    $("#output_" + ids[i]).width((w - 125)/ids.length);
-                    $("#output_" + ids[i]).height(h-20);
-                    $("#output_" + ids[i]).height(h-20);
-
+                    var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+                    $("#output_" + ids[i]).width((w - 125)/2);
+                    $("#output_" + ids[i]).height(346 + y_offset);
                     resize($("#output_" + ids[i]));
                 }
             }
-
-            function notifySize() {
-                var ids = getActiveTermsInstanceIds();
-                for (var i = 0; i < ids.length; i++) {
-                    var w = Math.max(document.documentElement.clientHeight, window.innerWidth || 0);
-                    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-                    var width = $("#output_" + ids[i]).width();
-                    var height = $("#output_" + ids[i]).height();
-
-                    resize($("#output_" + ids[i]), width, height);
-                }
-            }
-
-            function parse_xterm_style() {
-                var text = $('.xterm-helpers style').text();
-                var arr = text.split('xterm-normal-char{width:');
-                style.width = parseFloat(arr[1]);
-                arr = text.split('div{height:');
-                style.height = parseFloat(arr[1]);
-            }
-
-
-            function get_cell_size(term) {
-                style.width = term._core._renderService._renderer.dimensions.actualCellWidth;
-                style.height = term._core._renderService._renderer.dimensions.actualCellHeight;
-                console.log("oh typeerro " + style.width);
-            }
-
-
-
-            function current_geometry(term) {
-                if (!style.width || !style.height) {
-                    try {
-                        get_cell_size(term);
-                    } catch (TypeError) {
-                        console.log("oh typeerro");
-                        parse_xterm_style();
-                    }
-                }
-
-                var cols = parseInt(window.innerWidth / style.width, 10) - 1;
-                var rows = parseInt(window.innerHeight / style.height, 10);
-                console.log("rows " + rows);
-                console.log("cols " + cols);
-                return {'cols': cols, 'rows': rows};
-            }
-
 
             //resize element during drag event. Makes call to set pty width and height
             function resize(element) {
                 var id = element.attr("id").replace("output_", "");
 
                 if (termMap[id]) {
-
-                    var geometry = current_geometry(termMap[id]);
-                    console.log("geometry " + geometry);
-
-                    var width = Math.floor($('#output_' + id).innerWidth() - 125);
-                    var height = Math.floor($('#output_' + id).innerHeight() - 125);
+                    var width = Math.floor($('#output_' + id).innerWidth() - 20);
+                    var height = Math.floor($('#output_' + id).innerHeight() - y_offset);
 
                     $.ajax({
                         url: '../admin/setPtyType.ktrl?id=' + id + '&userSettings.ptyWidth=' + width + '&userSettings.ptyHeight=' + height + '&_csrf=' + [[${session._csrf}]],
                         cache: false
                     });
-//                    $('#terminal .terminal').toggleClass('fullscreen');
+                    $('#terminal_' + id + ' .terminal').toggleClass('fullscreen');
                     fitMap[id].fit();
-                }
-
-            }
-
-            function resize(element, width, height) {
-                var id = element.attr("id").replace("output_", "");
-
-                if (termMap[id]) {
-                    console.log("geometry " + geometry);
-
-                    $.ajax({
-                        url: '../admin/setPtyType.ktrl?id=' + id + '&userSettings.ptyWidth=' + width + '&userSettings.ptyHeight=' + height + '&_csrf=' + [[${session._csrf}]],
-                        cache: false
-                    });
-//                    $('#terminal .terminal').toggleClass('fullscreen');
                 }
 
             }
@@ -326,6 +262,7 @@
                 console.log('WebSocket Error ' + error);
             };
 
+            // Log messages from the server
             connection.onmessage = function (e) {
                 var json = jQuery.parseJSON(e.data);
                 console.log(json);
@@ -353,51 +290,62 @@
 
                 var  CUSTOM_THEME =
                     {
-                        [# th:if= "${userSettings != null && userSettings.bg != null}"]
-                background: [[${userSettings.bg}]],
+                    [# th:if= "${userSettings != null && userSettings.bg != null}"]
+                        background: [[${userSettings.bg}]],
                     [/]
-                        [# th:if= "${userSettings != null && userSettings.bg != null}"]
-                foreground: [[${userSettings.fg}]],
-                    cursor: [[${userSettings.fg}]],
-                    cursorAccent: [[${userSettings.fg}]],
+                    [# th:if= "${userSettings != null && userSettings.bg != null}"]
+                        foreground: [[${userSettings.fg}]],
+                        cursor: [[${userSettings.fg}]],
+                        cursorAccent: [[${userSettings.fg}]],
                     [/]
-                        [# th:if= "${userSettings !=null && userSettings.colors != null && userSettings.colors.length == 16}"]
-                black: [[${userSettings.colors[0]}]],
-                    red: [[${userSettings.colors[1]}]],
-                    green: [[${userSettings.colors[2]}]],
-                    yellow: [[${userSettings.colors[3]}]],
-                    blue: [[${userSettings.colors[4]}]],
-                    magenta: [[${userSettings.colors[5]}]],
-                    cyan: [[${userSettings.colors[6]}]],
-                    white: [[${userSettings.colors[7]}]],
-                    brightBlack: [[${userSettings.colors[8]}]],
-                    brightRed: [[${userSettings.colors[9]}]],
-                    brightGreen: [[${userSettings.colors[10]}]],
-                    brightYellow: [[${userSettings.colors[11]}]],
-                    brightBlue: [[${userSettings.colors[12]}]],
-                    brightMagenta: [[${userSettings.colors[13]}]],
-                    brightCyan: [[${userSettings.colors[14]}]],
-                    brightWhite: [[${userSettings.colors[15]}]]
+                    [# th:if= "${userSettings !=null && userSettings.colors != null && userSettings.colors.length == 16}"]
+                        black: [[${userSettings.colors[0]}]],
+                        red: [[${userSettings.colors[1]}]],
+                        green: [[${userSettings.colors[2]}]],
+                        yellow: [[${userSettings.colors[3]}]],
+                        blue: [[${userSettings.colors[4]}]],
+                        magenta: [[${userSettings.colors[5]}]],
+                        cyan: [[${userSettings.colors[6]}]],
+                        white: [[${userSettings.colors[7]}]],
+                        brightBlack: [[${userSettings.colors[8]}]],
+                        brightRed: [[${userSettings.colors[9]}]],
+                        brightGreen: [[${userSettings.colors[10]}]],
+                        brightYellow: [[${userSettings.colors[11]}]],
+                        brightBlue: [[${userSettings.colors[12]}]],
+                        brightMagenta: [[${userSettings.colors[13]}]],
+                        brightCyan: [[${userSettings.colors[14]}]],
+                        brightWhite: [[${userSettings.colors[15]}]]
                     [/]
-            };
+                    };
 
-                termMap[id] = new Terminal({
-                    //fontSize: 14,
-                    'theme': CUSTOM_THEME,
-//                    'cursorStyle' : 'bar',
-//                    'cursorWidth' : '10',
-                    //                 'cursorInactiveStyle' : 'bar',
+                //fontSize: 16,
+                    //'theme': CUSTOM_THEME,
+                    //'cursorStyle' : 'bar',
+                    //'cursorWidth' : '12',
+                    //'cursorInactiveStyle' : 'bar',
                     //fontFamily: 'DejaVu Sans Mono, Liberation Mono, monospace'
-                });
+
+                termOptions = {
+                    cursorBlink: true,
+                    theme: {
+                        background:  'black',
+                        foreground: 'white',
+                        cursor:  'white',
+                        fontFamily: 'DejaVu Sans Mono, Liberation Mono, monospace',
+                        fontSize: 20
+                    }
+                }
+
+                termMap[id] = new Terminal(termOptions);
 
                 fitMap[id] = new FitAddon.FitAddon()
                 termMap[id].loadAddon(fitMap[id])
+
                 termMap[id].open($("#run_cmd_" + id).find('.output').get(0));
 
 
                 termMap[id].write(output);
-                fitMap[id].fit();
-                notifySize();
+
 
             }
 
@@ -420,10 +368,12 @@
 
                 //set focus to term
                 $(".output").mouseup(function (e) {
+                    if (window.getSelection().toString()) {
+                        termFocus = false;
+                    } else {
                         termFocus = true;
+                    }
                 });
-
-                $('.ter').toggleClass('fullscreen');
 
                 $(".output").bind('copy', function () {
                     setTimeout(function () {
@@ -433,25 +383,24 @@
                 });
 
                 //set resizable
-                /*
                 $(".output").resizable({
                     ghost: true,
                     stop: function (event, ui) {
                         resize($(this));
                     }
                 });
-
-                 */
             }
 
             //returns div for newly created terminal element
             function createTermElement(instanceId, hostId, displayLabel) {
                 var instance =
-                    "<div id=\"run_cmd_" + instanceId + "\" >"
-                    //                    + "<h6 class=\"term-header\">" + displayLabel + "</h6>"
-//                    + "<div class=\"term\">"
+                    "<div id=\"run_cmd_" + instanceId + "\" class=\"run_cmd_active run_cmd\">"
+                    + "<h6 class=\"term-header\">" + displayLabel + "</h6>"
+                    + "<div class=\"term\">"
                     + "<div id=\"output_" + instanceId + "\" class=\"output\"></div>"
-  //                  + "</div>"
+                    + "</div>"
+                    + "<div data-bs-hostId=\"" + hostId + "\" class=\"host\"></div>"
+                    + "</div>";
                 return instance;
             }
 
@@ -471,6 +420,7 @@
                     setTerminalEvents($("#run_cmd_" + newInstanceId));
 
 
+
                     //call server to create instances - returned the new cloned instance id
                     $.getJSON('../admin/createSession.ktrl?systemSelectId=' + hostId + '&_csrf=' + [[${session._csrf}]]);
 
@@ -486,7 +436,7 @@
                 var newInstanceId = getNextInstanceId();
                 var displayLabel = $('#connectHostId option:selected').text();
 
-                $(createTermElement(newInstanceId, hostId, displayLabel)).replaceAll(".termwrapper");
+                $(createTermElement(newInstanceId, hostId, displayLabel)).prependTo(".termwrapper");
 
                 setTerminalEvents($("#run_cmd_" + newInstanceId));
 
@@ -513,9 +463,8 @@
 
             //set connected systems
             [# th:each = "s : ${systemList}" ]
-            //"#termwrapper") =
-            $(createTermElement([[${s.instanceId}]], [[${s.id}]], [[${s.displayLabel}]])).replaceAll(".termwrapper");
-            setTerminalEvents($("#run_cmd_" + [[${s.instanceId}]]));
+                $(createTermElement([[${s.instanceId}]], [[${s.id}]], [[${s.displayLabel}]])).appendTo(".termwrapper");
+                setTerminalEvents($("#run_cmd_" + [[${s.instanceId}]]));
             [/]
 
             var y_offset = $('.run_cmd:first').innerHeight() - $('.run_cmd').find(".output:first").innerHeight();
@@ -529,45 +478,31 @@
     <style>
         .term-container {
             width: 100%;
+            padding: 10px 0;
             margin: 0;
         }
-
-        .notification {
-            width: 100%;
-            background: red;
-            color: white
-        }
-
-        .top {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 999;
-            width: 100%;
-            height: 23px;
-        }
-
         .term {
             background: [[${userSettings.bg}]];
         }
 
+        .scroll {
+            min-height: 1500px;
+        }
+
     </style>
-    <title>Bastillion for EC2 - Terminals</title>
+    <title>Bastillion - Terminals</title>
 </head>
 <body>
-<div class="notification">
-    <div id="alertWarn"></div>
-</div>
 <template th:if="${(systemList != null && !systemList.empty) || pendingSystemStatus.id != null }"
           th:remove="tag">
-    <div class="navbar navbar-dark bg-primary fixed-top navbar-expand-md" role="navigation">
+    <div class="navbar navbar-light bg-light fixed-top navbar-expand-md" role="navigation">
         <div class="container">
             <div class="navbar-brand">
                 <div class="nav-img">
                     <img src="/img/bastillion_40x40.png" th:src="@{/img/bastillion_40x40.png}"
                          alt="bastillion">
                 </div>
-                Bastillion for EC2
+                Bastillion
             </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                 <span class="navbar-toggler-icon"></span>
@@ -601,8 +536,8 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a href="javascript:window.close();"
-                                                class="nav-link">Exit Terminal</a>
+                        <li class="nav-item"><a th:href="'exitTerms.ktrl?_csrf=' + ${session._csrf}"
+                                                class="nav-link">Exit Terminals</a>
                         </li>
                     </ul>
                     <div class="clear"></div>
@@ -617,7 +552,8 @@
             <!--/.nav-collapse -->
         </div>
     </div>
-    <div class="termwrapper">
+    <div class="term-container container">
+        <div class="termwrapper"></div>
     </div>
 </template>
 <template th:if="${(systemList == null || systemList.empty) && pendingSystemStatus.id == null}"
@@ -644,8 +580,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary connect_btn"
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary connect_btn"
                         data-bs-dismiss="modal">Connect
                 </button>
             </div>
@@ -682,8 +618,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary cancel_btn" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary submit_btn">Submit</button>
+                <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary submit_btn">Submit</button>
             </div>
         </div>
     </div>
@@ -719,8 +655,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary cancel_btn" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary submit_btn">Submit</button>
+                <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary submit_btn">Submit</button>
             </div>
         </div>
     </div>
@@ -744,7 +680,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary submit_btn">OK</button>
+                <button type="button" class="btn btn-secondary submit_btn">OK</button>
             </div>
         </div>
     </div>
@@ -762,11 +698,15 @@
         </div>
     </div>
 </div>
-<form id="composite_terms_frm" th:action="@{/admin/createTerms.ktrl}">
+<form id="composite_terms_frm" th:action="@{/admin/createTerms.ktrl}"
+      method="post">
     <input type="hidden" name="_csrf" th:value="${session._csrf}">
     <input type="hidden" name="pendingSystemStatus.id" th:value="${pendingSystemStatus.id}">
     <input type="hidden" name="script.id" th:if="${script != null}" th:value="${script.id}">
 </form>
+<div class="bottom" id="alertWarn">
+    bottom
+</div>
 </body>
 
 </html>

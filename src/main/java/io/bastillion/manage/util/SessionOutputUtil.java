@@ -107,7 +107,7 @@ public class SessionOutputUtil {
         }
         UserSessionsOutput userSessionsOutput = userSessionsOutputMap.get(sessionId);
         if (userSessionsOutput != null) {
-            userSessionsOutput.getSessionOutputMap().get(instanceId).getOutput().append(value, offset, count);
+            userSessionsOutput.getSessionOutputMap().get(instanceId).append(value, offset, count);
         }
 
     }
@@ -136,9 +136,9 @@ public class SessionOutputUtil {
                     outputList.add(sessionOutput);
 
                     //send to audit logger
-                    systemAuditLogger.info(gson.toJson(new AuditWrapper(user, sessionOutput)));
 
                     if (enableInternalAudit) {
+                        systemAuditLogger.info(gson.toJson(new AuditWrapper(user, sessionOutput)));
                         SessionAuditDB.insertTerminalLog(con, sessionOutput);
                     }
 

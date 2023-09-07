@@ -34,17 +34,18 @@ public class SecureShellTask implements Runnable {
 
     public void run() {
         InputStreamReader isr = new InputStreamReader(outFromChannel);
-        BufferedReader br = new BufferedReader(isr);
+        BufferedReader br = new BufferedReader(isr,32*1024);
 
         SessionOutputUtil.addOutput(sessionOutput);
 
-        char[] buff = new char[1024];
+        char[] buff = new char[32*1024];
         int read;
         try {
             while ((read = br.read(buff)) != -1) {
                 if (read != 0){
                     System.out.println("got count " + read);
                 }
+
                 SessionOutputUtil.addToOutput(sessionOutput.getSessionId(), sessionOutput.getInstanceId(), buff, 0, read);
                 Thread.sleep(50);
             }

@@ -206,6 +206,23 @@ public class AuditingRulesDB {
         DBUtils.closeConn(con);
     }
 
+    public static void deleteRule(Rule rule) throws SQLException, GeneralSecurityException {
+
+        Connection con = DBUtils.getConn();
+
+        PreparedStatement stmt = con.prepareStatement("delete from system_rules where rule_id=?");
+        stmt.setLong(1, rule.getId());
+        stmt.execute();
+        DBUtils.closeStmt(stmt);
+
+        stmt = con.prepareStatement("delete from rules where id=?");
+        stmt.setLong(1, rule.getId());
+        stmt.execute();
+        DBUtils.closeStmt(stmt);
+
+        DBUtils.closeConn(con);
+    }
+
     /**
      * inserts rule into DB
      *

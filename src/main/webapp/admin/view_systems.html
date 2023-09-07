@@ -11,6 +11,14 @@
     <meta th:replace="_res/inc/header">
 
     <script th:inline="javascript">
+        $(document).ready(function () {
+            setTimeout(function () {
+                const queryString = window.location.search;
+                const urlParams = new URLSearchParams(queryString);
+                const csrf = urlParams.get('_csrf')
+                window.location.href=window.location.href
+            }, 5000);
+        });
         /*<![CDATA[*/
         $(document).ready(function () {
             $("#view_btn").button().click(function () {
@@ -108,43 +116,41 @@
         </div>
     </form>
     <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
-        <form th:action="@{/admin/selectSystemsForCompositeTerms.ktrl}" id="select_frm">
+        <!--<form target="_blank" th:action="@{/admin/selectSystemsForCompositeTerms.ktrl}" id="select_frm">-->
             <input type="hidden" name="_csrf" th:value="${session._csrf}">
             <input type="hidden" name="script.id" th:if="${script != null && script.id != null}"
                    th:value="${script.id}">
             <table class="table-striped scrollableTable">
                 <thead>
                 <tr>
-                    <th>
-                        <input type="checkbox" id="select_frm_systemSelectAll" name="systemSelectAll"
-                               class="systemSelect form-check-input" title="Select All">
-                    </th>
                     <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_NAME}" class="sort">Display Name</th>
                     <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_USER}"
                         class="sort">User</th>
                     <th th:id="${@io.bastillion.manage.db.SystemDB@SORT_BY_HOST}"
                         class="sort">Host</th>
+                    <th ></th>
                 </tr>
                 </thead>
                 <tbody>
                 <template th:each="s : ${sortedSet.itemList}" th:remove="tag">
                     <tr>
-                        <td>
-                            <input type="checkbox" name="systemSelectId" th:value="${s.id}" class="systemSelect form-check-input"
-                                   th:title="${s.displayNm}">
-                        </td>
                         <td th:text="${s.displayNm}"></td>
                         <td th:text="${s.user}"></td>
                         <td th:text="${s.host} +':' + ${s.port}"></td>
+                        <td><a  target="_blank" th:href="'/admin/selectSystemsForCompositeTerms.ktrl?systemSelectId=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
+
+                            <button th:id="'role_btn_' + ${s.id}"
+                                    class="btn btn-secondary edit_btn spacer spacer-left">Open Terminal
+
+                            </button>
+                        </a></td>
                     </tr>
                 </template>
                 </tbody>
             </table>
-        </form>
+        <!--</form>-->
     </div>
     <div class="btn btn-secondary select_frm_btn spacer spacer-bottom" th:if="${script != null && script.id != null && sortedSet.itemList != null && !sortedSet.itemList.empty}">Execute Script</div>
-    <div class="btn btn-secondary select_frm_btn spacer spacer-bottom"
-         th:if="${(script == null || script.id == null) && sortedSet.itemList != null && !sortedSet.itemList.empty}">Create Terminals</div>
     <div class="actionMessage" th:if="${(script == null || script.id == null) && (sortedSet.itemList == null || sortedSet.itemList.empty)}">
         <p class="error">Systems not available
             <template th:if="${#strings.equals(session.userType,'M')}"

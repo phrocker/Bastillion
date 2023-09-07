@@ -75,7 +75,7 @@
                                 title="Profile" class="form-select view_frm_select">
                             <option value="">- Select Profile -</option>
                             <option th:each="p : ${profileList}" th:value="${p.id}"
-                                    th:text="${p.nm}" th:selected="${#strings.equals(sortedSet.filterMap.get(@io.bastillion.manage.db.AuditingRulesDB@FILTER_BY_PROFILE_ID), p.id)}"></option>
+                                    th:text="${p.displayNm}" th:selected="${#strings.equals(sortedSet.filterMap.get(@io.bastillion.manage.db.AuditingRulesDB@FILTER_BY_PROFILE_ID), p.id)}"></option>
                         </select>
                     </td>
                     <td>
@@ -92,32 +92,31 @@
             <table class="table-striped scrollableTable">
                 <thead>
                 <tr>
-                    <th>
-                        <input type="checkbox" id="select_frm_systemSelectAll" name="systemSelectAll"
-                               class="systemSelect form-check-input" title="Select All">
-                    </th>
                     <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_NAME}" class="sort">Rule Name</th>
                     <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CLASS}"
                         class="sort">Rule Class</th>
-                    <th></th>
+                    <th>Rule Operations</th>
                 </tr>
                 </thead>
                 <tbody>
                 <template th:each="s : ${sortedSet.itemList}" th:remove="tag">
                     <tr>
-                        <td>
-                            <input type="checkbox" name="ruleSelectId" th:value="${s.id}" class="systemSelect form-check-input"
-                                   th:title="${s.displayNm}">
-                        </td>
                         <td th:text="${s.displayNm}"></td>
                         <td th:text="${s.ruleClass}"></td>
-                        <td><a th:href="'/manage/viewSystemRules.ktrl?rule.id=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
+                        <td><a th:href="'/manage/deleteRule.ktrl?rule.id=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
 
-                            <button th:id="'role_btn_' + ${s.id}"
-                                    class="btn btn-secondary edit_btn spacer spacer-left">Assign Systems
+                            <button th:id="'del_role_btn_' + ${s.id}"
+                                    class="btn btn-secondary edit_btn spacer spacer-left">Delete Rule
 
                             </button>
-                        </a></td>
+                        </a>
+                            <a th:href="'/manage/viewSystemRules.ktrl?rule.id=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
+
+                                <button th:id="'role_btn_' + ${s.id}"
+                                        class="btn btn-secondary edit_btn spacer spacer-left">Assign Systems
+
+                                </button>
+                            </a></td>
                     </tr>
                 </template>
                 </tbody>

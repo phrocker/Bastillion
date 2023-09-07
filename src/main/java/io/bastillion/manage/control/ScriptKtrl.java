@@ -42,7 +42,7 @@ public class ScriptKtrl extends BaseKontroller {
     @Kontrol(path = "/admin/viewScripts", method = MethodType.GET)
     public String viewScripts() throws ServletException {
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
             sortedSet = ScriptDB.getScriptSet(sortedSet, userId);
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
@@ -56,7 +56,7 @@ public class ScriptKtrl extends BaseKontroller {
     @Kontrol(path = "/admin/saveScript", method = MethodType.POST)
     public String saveScript() throws ServletException {
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
             if (script.getId() != null) {
                 ScriptDB.updateScript(script, userId);
             } else {
@@ -74,7 +74,7 @@ public class ScriptKtrl extends BaseKontroller {
 
         if (script.getId() != null) {
             try {
-                Long userId = AuthUtil.getUserId(getRequest().getSession());
+                Long userId = AuthUtil.getUserId(getRequest());
                 ScriptDB.deleteScript(script.getId(), userId);
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
@@ -105,7 +105,7 @@ public class ScriptKtrl extends BaseKontroller {
 
         if (!this.getFieldErrors().isEmpty()) {
             try {
-                Long userId = AuthUtil.getUserId(getRequest().getSession());
+                Long userId = AuthUtil.getUserId(getRequest());
                 sortedSet = ScriptDB.getScriptSet(sortedSet, userId);
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);

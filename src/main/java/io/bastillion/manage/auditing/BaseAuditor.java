@@ -75,6 +75,7 @@ public abstract class BaseAuditor {
                 break;
             case 13:
                 System.out.println("on message " + get().toString());
+            case 67:
                 clear();
             default:
                 break;

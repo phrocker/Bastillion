@@ -52,7 +52,7 @@ public class UsersKtrl extends BaseKontroller {
     @Kontrol(path = "/manage/viewUsers", method = MethodType.GET)
     public String viewUsers() throws ServletException {
         try {
-            userId = AuthUtil.getUserId(getRequest().getSession());
+            userId = AuthUtil.getUserId(getRequest());
             sortedSet = UserDB.getUserSet(sortedSet);
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
@@ -92,7 +92,7 @@ public class UsersKtrl extends BaseKontroller {
     public String deleteUser() throws ServletException {
 
         try {
-            if (user.getId() != null && !user.getId().equals(AuthUtil.getUserId(getRequest().getSession()))) {
+            if (user.getId() != null && !user.getId().equals(AuthUtil.getUserId(getRequest()))) {
                 UserDB.deleteUser(user.getId());
                 PublicKeyDB.deleteUserPublicKeys(user.getId());
                 RefreshAuthKeyUtil.refreshAllSystems();
@@ -108,7 +108,7 @@ public class UsersKtrl extends BaseKontroller {
     public String unlockUser() throws ServletException {
 
         try {
-            if (user.getId() != null && !user.getId().equals(AuthUtil.getUserId(getRequest().getSession()))) {
+            if (user.getId() != null && !user.getId().equals(AuthUtil.getUserId(getRequest()))) {
                 UserDB.unlockAccount(user.getId());
             }
         } catch (SQLException | GeneralSecurityException ex) {
@@ -158,7 +158,7 @@ public class UsersKtrl extends BaseKontroller {
                 addError("Username has been taken");
             }
             if (!this.getFieldErrors().isEmpty() || !this.getErrors().isEmpty()) {
-                userId = AuthUtil.getUserId(getRequest().getSession());
+                userId = AuthUtil.getUserId(getRequest());
                 sortedSet = UserDB.getUserSet(sortedSet);
             }
         } catch (SQLException | GeneralSecurityException ex) {

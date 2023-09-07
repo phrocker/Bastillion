@@ -473,7 +473,9 @@ public class SSHUtil {
             if ("true".equals(AppConfig.getProperty("agentForwarding"))) {
                 ((ChannelShell) channel).setAgentForwarding(true);
             }
-            ((ChannelShell) channel).setPtyType("xterm");
+            // 80, 24, 640, 480);
+            //((ChannelShell) channel).setPtyType("xterm-256color", 425, 81, 0, 0);
+            ((ChannelShell) channel).setPtyType("xterm-256color");
 
             InputStream outFromChannel = channel.getInputStream();
 

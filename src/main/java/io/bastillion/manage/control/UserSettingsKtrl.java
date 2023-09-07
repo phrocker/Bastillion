@@ -76,7 +76,7 @@ public class UserSettingsKtrl extends BaseKontroller {
     public String userSettings() throws ServletException {
 
         try {
-            userSettings = UserThemeDB.getTheme(AuthUtil.getUserId(getRequest().getSession()));
+            userSettings = UserThemeDB.getTheme(AuthUtil.getUserId(getRequest()));
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -97,7 +97,7 @@ public class UserSettingsKtrl extends BaseKontroller {
 
         } else {
             try {
-                auth.setAuthToken(AuthUtil.getAuthToken(getRequest().getSession()));
+                auth.setAuthToken(AuthUtil.getAuthToken(getRequest()));
 
                 if (AuthDB.updatePassword(auth)) {
                     retVal = "redirect:/admin/menu.html";
@@ -119,7 +119,7 @@ public class UserSettingsKtrl extends BaseKontroller {
         userSettings.setTheme(userSettings.getTheme());
         userSettings.setPlane(userSettings.getPlane());
         try {
-            UserThemeDB.saveTheme(AuthUtil.getUserId(getRequest().getSession()), userSettings);
+            UserThemeDB.saveTheme(AuthUtil.getUserId(getRequest()), userSettings);
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);

@@ -38,12 +38,30 @@ public class SessionOutput extends HostSystem {
         this.sessionId = sessionId;
     }
 
-    public StringBuilder getOutput() {
+
+  /*  public StringBuilder getOutput() {
         return output;
+    }*/
+
+    public String getOutput(){
+        synchronized (output){
+            return output.toString();
+        }
+    }
+
+    public void append(char [] str, int offset, int count){
+        synchronized (output){
+            output.append(str,offset,count);
+        }
     }
 
     public void setOutput(StringBuilder output) {
         this.output = output;
     }
 
+    public void append(String str) {
+        synchronized (output){
+            output.append(str);
+        }
+    }
 }

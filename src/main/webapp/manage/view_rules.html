@@ -94,7 +94,7 @@
                                 title="Profile" class="form-select view_frm_select">
                             <option value="">- Select Profile -</option>
                             <option th:each="p : ${sortedSet.itemList}" th:value="${p.id}"
-                                    th:text="${p.nm}"
+                                    th:text="${p.displayNm}"
                                     th:selected="${#strings.equals(sortedSet.filterMap.get(@io.bastillion.manage.db.AuditingRulesDB@FILTER_BY_PROFILE_ID), p.id)}"></option>
                         </select>
                     </td>
@@ -184,7 +184,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>Host
+                                    <td>Rule Config
                                     </td>
                                     <td>
                                         <input type="text" name="rule.ruleConfig" th:value="${rule.ruleConfig}"

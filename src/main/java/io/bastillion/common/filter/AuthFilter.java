@@ -57,12 +57,12 @@ public class AuthFilter implements Filter {
 
         try {
             //read auth token
-            String authToken = AuthUtil.getAuthToken(servletRequest.getSession());
+            String authToken = AuthUtil.getAuthToken(servletRequest);
 
             //check if exists
             if (authToken != null && !authToken.trim().equals("")) {
                 //check if valid admin auth token
-                String userType = AuthDB.isAuthorized(AuthUtil.getUserId(servletRequest.getSession()), authToken);
+                String userType = AuthDB.isAuthorized(AuthUtil.getUserId(servletRequest), authToken);
                 if (userType != null) {
                     String uri = servletRequest.getRequestURI();
                     if (Auth.MANAGER.equals(userType)) {
@@ -70,10 +70,10 @@ public class AuthFilter implements Filter {
                     } else if (!uri.contains("/manage/") && Auth.ADMINISTRATOR.equals(userType)) {
                         isAdmin = true;
                     }
-                    AuthUtil.setUserType(servletRequest.getSession(), userType);
+                    AuthUtil.setUserType(servletRequest, servletResponse, userType);
 
                     //check to see if user has timed out
-                    String timeStr = AuthUtil.getTimeout(servletRequest.getSession());
+                    String timeStr = AuthUtil.getTimeout(servletRequest);
                     if (timeStr != null && !timeStr.trim().equals("")) {
                         SimpleDateFormat sdf = new SimpleDateFormat("MMddyyyyHHmmss");
                         Date sessionTimeout = sdf.parse(timeStr);
@@ -83,7 +83,7 @@ public class AuthFilter implements Filter {
                         if (sessionTimeout == null || currentTime.after(sessionTimeout)) {
                             isAdmin = false;
                         } else {
-                            AuthUtil.setTimeout(servletRequest.getSession());
+                            AuthUtil.setTimeout(servletResponse);
                         }
                     } else {
                         isAdmin = false;
@@ -93,13 +93,14 @@ public class AuthFilter implements Filter {
 
             //if not admin redirect to login page
             if (!isAdmin) {
-                AuthUtil.deleteAllSession(servletRequest.getSession());
+                 AuthUtil.deleteAllSession(servletRequest, servletResponse);
                 servletResponse.sendRedirect(servletRequest.getContextPath() + "/");
             } else {
                 chain.doFilter(req, resp);
             }
         } catch (SQLException | ParseException | IOException | GeneralSecurityException ex) {
-            AuthUtil.deleteAllSession(servletRequest.getSession());
+            AuthUtil.deleteAllSession(servletRequest, servletResponse);
+            ex.printStackTrace();
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
         }

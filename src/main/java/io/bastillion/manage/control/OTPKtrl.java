@@ -61,7 +61,7 @@ public class OTPKtrl extends BaseKontroller {
         sharedSecret = OTPUtil.generateSecret();
 
         try {
-            AuthUtil.setOTPSecret(getRequest().getSession(), sharedSecret);
+            AuthUtil.setOTPSecret(getRequest(),getResponse(), sharedSecret);
         } catch (GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -76,14 +76,14 @@ public class OTPKtrl extends BaseKontroller {
     public String otpSubmit() throws ServletException {
 
         try {
-            AuthDB.updateSharedSecret(sharedSecret, AuthUtil.getAuthToken(getRequest().getSession()));
+            AuthDB.updateSharedSecret(sharedSecret, AuthUtil.getAuthToken(getRequest()));
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
         }
 
         if (requireOTP) {
-            AuthUtil.deleteAllSession(getRequest().getSession());
+            AuthUtil.deleteAllSession(getRequest(), getResponse());
         }
         return "redirect:/logout.ktrl";
 
@@ -96,9 +96,9 @@ public class OTPKtrl extends BaseKontroller {
         String username;
         String secret;
         try {
-            username = UserDB.getUser(AuthUtil.getUserId(getRequest().getSession())).getUsername();
-            secret = AuthUtil.getOTPSecret(getRequest().getSession());
-            AuthUtil.setOTPSecret(getRequest().getSession(), null);
+            username = UserDB.getUser(AuthUtil.getUserId(getRequest())).getUsername();
+            secret = AuthUtil.getOTPSecret(getRequest());
+            AuthUtil.setOTPSecret(getRequest(),getResponse(), null);
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);

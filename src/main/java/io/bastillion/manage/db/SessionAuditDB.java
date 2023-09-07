@@ -245,7 +245,7 @@ public class SessionAuditDB {
         SessionOutput sessionOutput = new SessionOutput();
         sessionOutput.setSessionId(sessionId);
         sessionOutput.setInstanceId(instanceId);
-        sessionOutput.getOutput().append(output);
+        sessionOutput.append(output);
 
         outputList.add(sessionOutput);
 

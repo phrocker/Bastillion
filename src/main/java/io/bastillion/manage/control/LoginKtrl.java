@@ -47,6 +47,9 @@ public class LoginKtrl extends BaseKontroller {
 
     @Kontrol(path = "/login", method = MethodType.GET)
     public String login() {
+
+        AuthUtil.deleteAllSession(getRequest(),getResponse());
+
         return "/login.html";
     }
 
@@ -87,11 +90,13 @@ public class LoginKtrl extends BaseKontroller {
                         return "/login.html";
                     }
 
-                    AuthUtil.setAuthToken(getRequest().getSession(), authToken);
-                    AuthUtil.setUserId(getRequest().getSession(), user.getId());
-                    AuthUtil.setAuthType(getRequest().getSession(), user.getAuthType());
-                    AuthUtil.setTimeout(getRequest().getSession());
-                    AuthUtil.setUsername(getRequest().getSession(), user.getUsername());
+                    AuthUtil.setAuthToken(getResponse(), authToken);
+                    AuthUtil.setUserId(getRequest(),getResponse(), user.getId());
+                    AuthUtil.setAuthType(getRequest(),getResponse(), user.getAuthType());
+                    AuthUtil.setTimeout(getResponse());
+                    AuthUtil.setUsername( getResponse(), user.getUsername());
+                    String userType = AuthDB.isAuthorized(user.getId(), authToken);
+                    AuthUtil.setUserType(getRequest(),getResponse(),userType);
 
                     AuthDB.updateLastLogin(user);
 
@@ -121,7 +126,7 @@ public class LoginKtrl extends BaseKontroller {
 
     @Kontrol(path = "/logout", method = MethodType.GET)
     public String logout() {
-        AuthUtil.deleteAllSession(getRequest().getSession());
+        AuthUtil.deleteAllSession(getRequest(),getResponse());
         return "redirect:/";
     }
 

@@ -3,16 +3,22 @@
  * <p>
  * Licensed under The Prosperity Public License 3.0.0
  */
+
 package io.bastillion.common.util;
 
 import io.bastillion.manage.util.EncryptionUtil;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.websocket.EndpointConfig;
 import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 
 /**
@@ -26,88 +32,141 @@ public class AuthUtil {
     public static final String AUTH_TOKEN = "authToken";
     public static final String TIMEOUT = "timeout";
 
+    public static final String USER_TYPE = "userType";
+    public static final String AUTH_TYPE = "authType";
+
     private AuthUtil() {
     }
+
+    private static String getCookie(EndpointConfig request, String cookieName){
+        if (null != request.getUserProperties()) {
+            Object obj = request.getUserProperties().get(cookieName);
+            if (null != obj){
+                return obj.toString();
+            }
+        }
+        return null;
+    }
+
+    private static String getCookie(HttpServletRequest request, String cookieName){
+        if (null != request.getCookies()) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals(cookieName)) return cookie.getValue();
+            }
+        }
+        return null;
+    }
+
+    private static void expireCookies(HttpServletRequest request, HttpServletResponse response, List<String> cookies){
+        if (null != request.getCookies()) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookies.contains( cookie.getName())){
+                    cookie.setValue("");
+                    cookie.setMaxAge(0);
+                    cookie.setSecure(true);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                }
+            }
+        }
+
+    }
+
 
     /**
      * query session for OTP shared secret
      *
-     * @param session http session
+     * @param request http request
      * @return shared secret
      */
-    public static String getOTPSecret(HttpSession session) throws GeneralSecurityException {
-        String secret = (String) session.getAttribute("otp_secret");
-        secret = EncryptionUtil.decrypt(secret);
-        return secret;
+    public static String getOTPSecret(HttpServletRequest request) throws GeneralSecurityException {
+        return EncryptionUtil.decrypt(getCookie(request,AUTH_TYPE));
     }
 
     /**
      * set authentication type
      *
-     * @param session  http session
+     * @param request  http session
      * @param authType authentication type
      */
-    public static void setAuthType(HttpSession session, String authType) {
+    public static void setAuthType(HttpServletRequest request,HttpServletResponse response, String authType) {
         if (authType != null) {
-            session.setAttribute("authType", authType);
+            Cookie cookie = new Cookie("authType",authType);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
         }
     }
 
     /**
      * query authentication type
      *
-     * @param session http session
+     * @param request http request
      * @return authentication type
      */
-    public static String getAuthType(HttpSession session) {
-        String authType = (String) session.getAttribute("authType");
-        return authType;
+    public static String getAuthType(HttpServletRequest request) {
+        return getCookie(request,AUTH_TYPE);
     }
 
     /**
      * set user type
      *
-     * @param session  http session
+     * @param request  http session
      * @param userType user type
      */
-    public static void setUserType(HttpSession session, String userType) {
+    public static void setUserType(HttpServletRequest request, HttpServletResponse response, String userType) {
         if (userType != null) {
-            session.setAttribute("userType", userType);
+            Cookie cookie = new Cookie("userType", userType);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+            request.getSession().setAttribute("userType",userType);
         }
     }
 
     /**
      * query user type
      *
-     * @param session http session
+     * @param request http request
      * @return user type
      */
-    public static String getUserType(HttpSession session) {
-        String userType = (String) session.getAttribute("userType");
-        return userType;
+    public static String getUserType(HttpServletRequest request) {
+        return getCookie(request,"userType");
     }
 
     /**
      * set session id
      *
-     * @param session   http session
+     * @param request   http session
      * @param sessionId session id
      */
-    public static void setSessionId(HttpSession session, Long sessionId) throws GeneralSecurityException {
+    public static void setSessionId(HttpServletRequest request,HttpServletResponse response, Long sessionId) throws GeneralSecurityException {
         if (sessionId != null) {
-            session.setAttribute(SESSION_ID, EncryptionUtil.encrypt(sessionId.toString()));
+            Cookie cookie = new Cookie(SESSION_ID, EncryptionUtil.encrypt(sessionId.toString()));
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
         }
     }
 
     /**
      * query session id
      *
-     * @param session http session
+     * @param request http request
      * @return session id
      */
-    public static Long getSessionId(HttpSession session) throws GeneralSecurityException {
+    public static Long getSessionId(HttpServletRequest request) throws GeneralSecurityException {
         Long sessionId = null;
-        String sessionIdStr = EncryptionUtil.decrypt((String) session.getAttribute(SESSION_ID));
+        String sessionIdStr = EncryptionUtil.decrypt( getCookie(request,SESSION_ID));
+        if (sessionIdStr != null && !sessionIdStr.trim().equals("")) {
+            sessionId = Long.parseLong(sessionIdStr);
+        }
+        return sessionId;
+    }
+
+    public static Long getSessionId(EndpointConfig config) throws GeneralSecurityException {
+        Long sessionId = null;
+        String sessionIdStr = EncryptionUtil.decrypt( getCookie(config,SESSION_ID));
         if (sessionIdStr != null && !sessionIdStr.trim().equals("")) {
             sessionId = Long.parseLong(sessionIdStr);
         }
@@ -117,12 +176,21 @@ public class AuthUtil {
     /**
      * query session for user id
      *
-     * @param session http session
+     * @param request http request
      * @return user id
      */
-    public static Long getUserId(HttpSession session) throws GeneralSecurityException {
+    public static Long getUserId(HttpServletRequest request) throws GeneralSecurityException {
         Long userId = null;
-        String userIdStr = EncryptionUtil.decrypt((String) session.getAttribute(USER_ID));
+        String userIdStr = EncryptionUtil.decrypt(getCookie(request,USER_ID));
+        if (userIdStr != null && !userIdStr.trim().equals("")) {
+            userId = Long.parseLong(userIdStr);
+        }
+        return userId;
+    }
+
+    public static Long getUserId(EndpointConfig request) throws GeneralSecurityException {
+        Long userId = null;
+        String userIdStr = EncryptionUtil.decrypt(getCookie(request,USER_ID));
         if (userIdStr != null && !userIdStr.trim().equals("")) {
             userId = Long.parseLong(userIdStr);
         }
@@ -132,21 +200,22 @@ public class AuthUtil {
     /**
      * query session for the username
      *
-     * @param session http session
+     * @param request http request
      * @return username
      */
-    public static String getUsername(HttpSession session) {
-        return (String) session.getAttribute(USERNAME);
+    public static String getUsername(HttpServletRequest request) {
+        return getCookie(request,USERNAME);
     }
 
     /**
      * query session for authentication token
      *
-     * @param session http session
+     * @param request http request
      * @return authentication token
      */
-    public static String getAuthToken(HttpSession session) throws GeneralSecurityException {
-        String authToken = (String) session.getAttribute(AUTH_TOKEN);
+    public static String getAuthToken(HttpServletRequest request) throws GeneralSecurityException {
+
+        String authToken = getCookie(request,AUTH_TOKEN);
         authToken = EncryptionUtil.decrypt(authToken);
         return authToken;
     }
@@ -154,23 +223,25 @@ public class AuthUtil {
     /**
      * query session for timeout
      *
-     * @param session http session
+     * @param request http request
      * @return timeout string
      */
-    public static String getTimeout(HttpSession session) {
-        String timeout = (String) session.getAttribute(TIMEOUT);
-        return timeout;
+    public static String getTimeout(HttpServletRequest request) {
+        return getCookie(request,TIMEOUT);
     }
 
     /**
      * set session OTP shared secret
      *
-     * @param session http session
+     * @param request http request
      * @param secret  shared secret
      */
-    public static void setOTPSecret(HttpSession session, String secret) throws GeneralSecurityException {
+    public static void setOTPSecret(HttpServletRequest request, HttpServletResponse response, String secret) throws GeneralSecurityException {
         if (secret != null && !secret.trim().equals("")) {
-            session.setAttribute("otp_secret", EncryptionUtil.encrypt(secret));
+            Cookie cookie = new Cookie("otp_secret",EncryptionUtil.encrypt(secret));
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
         }
     }
 
@@ -178,12 +249,15 @@ public class AuthUtil {
     /**
      * set session user id
      *
-     * @param session http session
+     * @param request http request
      * @param userId  user id
      */
-    public static void setUserId(HttpSession session, Long userId) throws GeneralSecurityException {
+    public static void setUserId(HttpServletRequest request,HttpServletResponse response, Long userId) throws GeneralSecurityException {
         if (userId != null) {
-            session.setAttribute(USER_ID, EncryptionUtil.encrypt(userId.toString()));
+            Cookie cookie = new Cookie(USER_ID, EncryptionUtil.encrypt(userId.toString()));
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
         }
     }
 
@@ -191,12 +265,16 @@ public class AuthUtil {
     /**
      * set session username
      *
-     * @param session  http session
+     * @param response  http session
      * @param username username
      */
-    public static void setUsername(HttpSession session, String username) {
+    public static void setUsername(HttpServletResponse response, String username) {
         if (username != null) {
-            session.setAttribute(USERNAME, username);
+            Cookie cookie = new Cookie(USERNAME, username);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+
         }
     }
 
@@ -204,42 +282,51 @@ public class AuthUtil {
     /**
      * set session authentication token
      *
-     * @param session   http session
+     * @param request   http session
      * @param authToken authentication token
      */
-    public static void setAuthToken(HttpSession session, String authToken) throws GeneralSecurityException {
+    public static void setAuthToken(HttpServletResponse response, String authToken) throws GeneralSecurityException {
         if (authToken != null && !authToken.trim().equals("")) {
-            session.setAttribute(AUTH_TOKEN, EncryptionUtil.encrypt(authToken));
+            Cookie cookie = new Cookie(AUTH_TOKEN, EncryptionUtil.encrypt(authToken));
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
         }
     }
 
     /**
      * set session timeout
      *
-     * @param session http session
+     * @param response http request
      */
-    public static void setTimeout(HttpSession session) {
+    public static void setTimeout(HttpServletResponse response) {
         //set session timeout
         SimpleDateFormat sdf = new SimpleDateFormat("MMddyyyyHHmmss");
         Calendar timeout = Calendar.getInstance();
         timeout.add(Calendar.MINUTE, Integer.parseInt(AppConfig.getProperty("sessionTimeout", "15")));
-        session.setAttribute(TIMEOUT, sdf.format(timeout.getTime()));
+        Cookie cookie = new Cookie(TIMEOUT, sdf.format(timeout.getTime()));
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 
 
     /**
      * delete all session information
      *
-     * @param session
+     * @param request
      */
-    public static void deleteAllSession(HttpSession session) {
+    public static void deleteAllSession(HttpServletRequest request, HttpServletResponse response) {
 
-        session.setAttribute(TIMEOUT, null);
-        session.setAttribute(AUTH_TOKEN, null);
-        session.setAttribute(USER_ID, null);
-        session.setAttribute(SESSION_ID, null);
-
-        session.invalidate();
+        List<String> cookies = new ArrayList<>();
+        cookies.add(TIMEOUT);
+        cookies.add(AUTH_TOKEN);
+        cookies.add(USER_ID);
+        cookies.add(SESSION_ID);
+        cookies.add(USERNAME);
+        cookies.add(USER_TYPE);
+        expireCookies(request,response,cookies);
+        request.getSession().invalidate();
     }
 
     /**
@@ -258,5 +345,6 @@ public class AuthUtil {
         }
         return clientIP;
     }
+
 
 }

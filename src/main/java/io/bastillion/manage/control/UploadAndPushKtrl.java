@@ -63,9 +63,9 @@ public class UploadAndPushKtrl extends BaseKontroller {
 
     @Kontrol(path = "/admin/setUpload", method = MethodType.GET)
     public String setUpload() throws Exception {
-        Long userId = AuthUtil.getUserId(getRequest().getSession());
+        Long userId = AuthUtil.getUserId(getRequest());
 
-        SystemStatusDB.setInitialSystemStatus(idList, userId, AuthUtil.getUserType(getRequest().getSession()));
+        SystemStatusDB.setInitialSystemStatus(idList, userId, AuthUtil.getUserType(getRequest()));
 
         return "/admin/upload.html";
 
@@ -78,7 +78,7 @@ public class UploadAndPushKtrl extends BaseKontroller {
         String retVal = "/admin/upload_result.html";
         try {
 
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
 
             List<FileItem> multiparts = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(getRequest());
             for (FileItem item : multiparts) {
@@ -103,7 +103,7 @@ public class UploadAndPushKtrl extends BaseKontroller {
             retVal = "/admin/upload.html";
         }
         //reset csrf token back since it's already set on page load
-        getRequest().getSession().setAttribute(SecurityFilter._CSRF,
+        getRequest().setAttribute(SecurityFilter._CSRF,
                 getRequest().getParameter(SecurityFilter._CSRF));
 
         return retVal;
@@ -114,8 +114,8 @@ public class UploadAndPushKtrl extends BaseKontroller {
 
         try {
 
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
-            Long sessionId = AuthUtil.getSessionId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
+            Long sessionId = AuthUtil.getSessionId(getRequest());
 
             //get next pending system
             pendingSystemStatus = SystemStatusDB.getNextPendingSystem(userId);
@@ -174,7 +174,7 @@ public class UploadAndPushKtrl extends BaseKontroller {
         }
 
         //reset csrf token back since it's already set on page load
-        getRequest().getSession().setAttribute(SecurityFilter._CSRF,
+        getRequest().setAttribute(SecurityFilter._CSRF,
                 getRequest().getParameter(SecurityFilter._CSRF));
 
         return "/admin/upload_result.html";

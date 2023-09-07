@@ -6,6 +6,7 @@
 package io.bastillion.manage.control;
 
 import com.jcraft.jsch.ChannelShell;
+import com.jcraft.jsch.JSchException;
 import io.bastillion.common.util.AuthUtil;
 import io.bastillion.manage.db.ScriptDB;
 import io.bastillion.manage.db.SessionAuditDB;
@@ -88,12 +89,24 @@ public class SecureShellKtrl extends BaseKontroller {
     /**
      * creates composite terminals if there are errors or authentication issues.
      */
-    @Kontrol(path = "/admin/createTerms", method = MethodType.POST)
+    @Kontrol(path = "/admin/getTerm", method = MethodType.GET)
     public String createTerms() throws ServletException {
 
         try {
-            Long userId = AuthUtil.getUserId(getRequest().getSession());
-            Long sessionId = AuthUtil.getSessionId(getRequest().getSession());
+            Long userId = AuthUtil.getUserId(getRequest());
+            Long sessionId = AuthUtil.getSessionId(getRequest());
+            createTerminals(userId,sessionId);
+        } catch (GeneralSecurityException ex) {
+            log.error(ex.toString(), ex);
+            throw new ServletException(ex.toString(), ex);
+        }
+
+
+        return "/admin/secure_shell.html";
+    }
+
+    private void createTerminals(Long userId, Long sessionId) throws ServletException {
+        try {
             if (pendingSystemStatus != null && pendingSystemStatus.getId() != null) {
 
 
@@ -136,7 +149,7 @@ public class SecureShellKtrl extends BaseKontroller {
                 //set allocated systems for connect to
                 SortedSet sortedSet = new SortedSet();
                 sortedSet.setOrderByField(SystemDB.SORT_BY_NAME);
-                if (Auth.MANAGER.equals(AuthUtil.getUserType(getRequest().getSession()))) {
+                if (Auth.MANAGER.equals(AuthUtil.getUserType(getRequest()))) {
                     sortedSet = SystemDB.getSystemSet(sortedSet);
                 } else {
                     sortedSet = SystemDB.getUserSystemSet(sortedSet, userId);
@@ -152,16 +165,13 @@ public class SecureShellKtrl extends BaseKontroller {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
         }
-
-
-        return "/admin/secure_shell.html";
     }
 
     @Kontrol(path = "/admin/getNextPendingSystemForTerms", method = MethodType.GET)
     public String getNextPendingSystemForTerms() throws ServletException {
         Long userId;
         try {
-            userId = AuthUtil.getUserId(getRequest().getSession());
+            userId = AuthUtil.getUserId(getRequest());
             currentSystemStatus = SystemStatusDB.getSystemStatus(pendingSystemStatus.getId(), userId);
             currentSystemStatus.setErrorMsg("Auth fail");
             currentSystemStatus.setStatusCd(HostSystem.GENERIC_FAIL_STATUS);
@@ -174,7 +184,7 @@ public class SecureShellKtrl extends BaseKontroller {
 
             //set system list if no pending systems
             if (pendingSystemStatus == null) {
-                setSystemList(userId, AuthUtil.getSessionId(getRequest().getSession()));
+                setSystemList(userId, AuthUtil.getSessionId(getRequest()));
             }
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
@@ -190,15 +200,17 @@ public class SecureShellKtrl extends BaseKontroller {
 
         if (systemSelectId != null && !systemSelectId.isEmpty()) {
             try {
-                Long userId = AuthUtil.getUserId(getRequest().getSession());
+                Long userId = AuthUtil.getUserId(getRequest());
 
-                SystemStatusDB.setInitialSystemStatus(systemSelectId, userId, AuthUtil.getUserType(getRequest().getSession()));
+                SystemStatusDB.setInitialSystemStatus(systemSelectId, userId, AuthUtil.getUserType(getRequest()));
                 pendingSystemStatus = SystemStatusDB.getNextPendingSystem(userId);
 
                 User user = UserDB.getUser(userId);
                 user.setIpAddress(AuthUtil.getClientIPAddress(getRequest()));
 
-                AuthUtil.setSessionId(getRequest().getSession(), SessionAuditDB.createSessionLog(user));
+                Long sessionId = SessionAuditDB.createSessionLog(user);
+                AuthUtil.setSessionId(getRequest(),getResponse(), sessionId);
+                createTerminals(userId, sessionId);
             } catch (SQLException | GeneralSecurityException ex) {
                 log.error(ex.toString(), ex);
                 throw new ServletException(ex.toString(), ex);
@@ -218,7 +230,7 @@ public class SecureShellKtrl extends BaseKontroller {
     public String disconnectTerm() throws ServletException {
         Long sessionId = null;
         try {
-            sessionId = AuthUtil.getSessionId(getRequest().getSession());
+            sessionId = AuthUtil.getSessionId(getRequest());
         } catch (GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -253,7 +265,7 @@ public class SecureShellKtrl extends BaseKontroller {
 
         Long userId = null;
         try {
-            userId = AuthUtil.getUserId(getRequest().getSession());
+            userId = AuthUtil.getUserId(getRequest());
         } catch (GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
@@ -262,7 +274,7 @@ public class SecureShellKtrl extends BaseKontroller {
         if (systemSelectId != null && !systemSelectId.isEmpty()) {
 
             try {
-                SystemStatusDB.setInitialSystemStatus(systemSelectId, userId, AuthUtil.getUserType(getRequest().getSession()));
+                SystemStatusDB.setInitialSystemStatus(systemSelectId, userId, AuthUtil.getUserType(getRequest()));
 
                 pendingSystemStatus = SystemStatusDB.getNextPendingSystem(userId);
 
@@ -282,8 +294,9 @@ public class SecureShellKtrl extends BaseKontroller {
 
         Long sessionId = null;
         try {
-            sessionId = AuthUtil.getSessionId(getRequest().getSession());
+            sessionId = AuthUtil.getSessionId(getRequest());
         } catch (GeneralSecurityException ex) {
+            ex.printStackTrace();
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
         }
@@ -294,8 +307,12 @@ public class SecureShellKtrl extends BaseKontroller {
                 SchSession schSession = userSchSessions.getSchSessionMap().get(id);
 
                 ChannelShell channel = (ChannelShell) schSession.getChannel();
-                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 8.0000), (int) Math.floor(userSettings.getPtyHeight() / 14.4166), userSettings.getPtyWidth(), userSettings.getPtyHeight());
-                schSession.setChannel(channel);
+                System.out.println("got " + (int) Math.floor(userSettings.getPtyWidth() / 8.0000) + " " + (int) Math.floor(userSettings.getPtyHeight() / 14.4166) + " " + userSettings.getPtyWidth() + " " +  userSettings.getPtyHeight());
+                //public void setPtySize(int col, int row, int wp, int hp) {
+//                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
+                //channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
+                channel.setPtySize(425,81, 0,0);
+//                schSession.setChannel(channel);
 
             }
 

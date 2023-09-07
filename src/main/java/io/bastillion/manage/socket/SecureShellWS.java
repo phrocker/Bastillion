@@ -53,10 +53,10 @@ public class SecureShellWS {
         }
         Runnable run = null;
         try {
-            this.sessionId = AuthUtil.getSessionId(httpSession);
+            this.sessionId = AuthUtil.getSessionId(config);
             this.session = session;
 
-            run = new SentOutputTask(sessionId, session, UserDB.getUser(AuthUtil.getUserId(httpSession)));
+            run = new SentOutputTask(sessionId, session, UserDB.getUser(AuthUtil.getUserId(config)));
         } catch (GeneralSecurityException | SQLException ex) {
             log.error(ex.toString(), ex);
         }
@@ -104,7 +104,7 @@ public class SecureShellWS {
 
                 }
                 //update timeout
-                AuthUtil.setTimeout(httpSession);
+                //AuthUtil.setTimeout(g);
             } catch (IllegalStateException | JsonSyntaxException | IOException ex) {
                 log.error(ex.toString(), ex);
             }
@@ -120,7 +120,7 @@ public class SecureShellWS {
     @OnClose
     public void onClose() {
 
-        if (SecureShellKtrl.getUserSchSessionMap() != null) {
+        if (SecureShellKtrl.getUserSchSessionMap() != null && null != sessionId) {
             UserSchSessions userSchSessions = SecureShellKtrl.getUserSchSessionMap().get(sessionId);
             if (userSchSessions != null) {
                 Map<Integer, SchSession> schSessionMap = userSchSessions.getSchSessionMap();
