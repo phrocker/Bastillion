@@ -7,6 +7,7 @@ package io.bastillion.manage.control;
 
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.AuthDB;
 import io.bastillion.manage.model.Auth;
 import io.bastillion.manage.model.User;
@@ -40,9 +41,14 @@ public class LoginKtrl extends BaseKontroller {
     @Model(name = "auth")
     Auth auth;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
+
 
     public LoginKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/login", method = MethodType.GET)
@@ -53,9 +59,14 @@ public class LoginKtrl extends BaseKontroller {
         return "/login.html";
     }
 
+    @Kontrol(path= "/admin/menu", method = MethodType.GET)
+    public String showMenu(){
+        return "/admin/menu.html";
+    }
+
     @Kontrol(path = "/loginSubmit", method = MethodType.POST)
     public String loginSubmit() throws ServletException {
-        String retVal = "redirect:/admin/menu.html";
+        String retVal = "redirect:/admin/menu.ktrl";
 
         String authToken = null;
         try {
@@ -94,7 +105,7 @@ public class LoginKtrl extends BaseKontroller {
                     AuthUtil.setUserId(getRequest(),getResponse(), user.getId());
                     AuthUtil.setAuthType(getRequest(),getResponse(), user.getAuthType());
                     AuthUtil.setTimeout(getResponse());
-                    AuthUtil.setUsername( getResponse(), user.getUsername());
+                    AuthUtil.setUsername(getRequest(), getResponse(), user.getUsername());
                     String userType = AuthDB.isAuthorized(user.getId(), authToken);
                     AuthUtil.setUserType(getRequest(),getResponse(),userType);
 

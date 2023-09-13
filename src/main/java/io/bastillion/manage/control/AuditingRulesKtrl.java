@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.AuditingRulesDB;
 import io.bastillion.manage.db.ProfileDB;
 import io.bastillion.manage.db.SystemDB;
@@ -46,9 +48,17 @@ public class AuditingRulesKtrl extends BaseKontroller {
     @Model(name = "ruleSelectId")
     List<Long> ruleSelectId = new ArrayList<>();
 
+    @Model(name = "systemLogoName")
+    String systemLogoName = "Bastillion";
+
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
 
     public AuditingRulesKtrl(HttpServletRequest request, HttpServletResponse response) {
+
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/ruleSettings", method = MethodType.GET)

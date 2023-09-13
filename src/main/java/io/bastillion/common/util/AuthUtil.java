@@ -268,13 +268,13 @@ public class AuthUtil {
      * @param response  http session
      * @param username username
      */
-    public static void setUsername(HttpServletResponse response, String username) {
+    public static void setUsername(HttpServletRequest request, HttpServletResponse response, String username) {
         if (username != null) {
             Cookie cookie = new Cookie(USERNAME, username);
             cookie.setSecure(true);
             cookie.setPath("/");
             response.addCookie(cookie);
-
+            request.getSession().setAttribute(USERNAME,username);
         }
     }
 

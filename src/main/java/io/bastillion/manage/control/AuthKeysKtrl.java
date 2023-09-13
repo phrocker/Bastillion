@@ -10,6 +10,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ProfileDB;
 import io.bastillion.manage.db.PublicKeyDB;
 import io.bastillion.manage.db.SessionAuditDB;
@@ -65,7 +66,7 @@ public class AuthKeysKtrl extends BaseKontroller {
     @Model(name = "sortedSet")
     SortedSet sortedSet = new SortedSet();
     @Model(name = "forceUserKeyGenEnabled")
-    boolean forceUserKeyGenEnabled = "true".equals(AppConfig.getProperty("forceUserKeyGeneration"));
+    boolean forceUserKeyGenEnabled = "false".equals(AppConfig.getProperty("forceUserKeyGeneration"));
     @Model(name = "hostSystem")
     HostSystem hostSystem = new HostSystem();
     @Model(name = "userPublicKeyList")
@@ -73,9 +74,13 @@ public class AuthKeysKtrl extends BaseKontroller {
     @Model(name = "existingKeyId")
     Long existingKeyId;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
 
     public AuthKeysKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/manage/enablePublicKey", method = MethodType.GET)

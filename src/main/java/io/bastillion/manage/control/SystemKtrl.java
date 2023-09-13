@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ProfileDB;
 import io.bastillion.manage.db.ScriptDB;
 import io.bastillion.manage.db.SystemDB;
@@ -49,8 +51,13 @@ public class SystemKtrl extends BaseKontroller {
     @Model(name = "profileList")
     List<Profile> profileList = new ArrayList<>();
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
+
     public SystemKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/viewSystems", method = MethodType.GET)

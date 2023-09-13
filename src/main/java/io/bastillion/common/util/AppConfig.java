@@ -181,6 +181,17 @@ public class AppConfig {
             prop.save();
         }
     }
+    static BastillionOptions options = null;
 
-
+    public static BastillionOptions getOptions(){
+        if (null == options){
+            synchronized (AppConfig.class){
+                if (null == options) {
+                    options = new BastillionOptions();
+                    options.systemLogoName = getProperty("systemLogoName", "Bastillion");
+                }
+            }
+        }
+        return options;
+    }
 }

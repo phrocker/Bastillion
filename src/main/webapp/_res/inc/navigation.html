@@ -11,14 +11,15 @@
                 <img src="/img/bastillion_40x40.png" th:src="@{/img/bastillion_40x40.png}"
                      alt="bastillion">
             </div>
-            Bastillion
+            [[${systemOptions.systemLogoName}]]
+
         </div>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a th:href="'../admin/menu.html?_csrf=' + ${session._csrf}"
+                <li class="nav-item"><a th:href="'../admin/menu.ktrl?_csrf=' + ${session._csrf}"
                                         class="nav-link">Home</a>
                 </li>
                 <li class="dropdown nav-item"><a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">Manage

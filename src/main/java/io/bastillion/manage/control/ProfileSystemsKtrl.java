@@ -5,6 +5,8 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ProfileDB;
 import io.bastillion.manage.db.ProfileSystemsDB;
 import io.bastillion.manage.db.SystemDB;
@@ -40,9 +42,13 @@ public class ProfileSystemsKtrl extends BaseKontroller {
     @Model(name = "systemSelectId")
     List<Long> systemSelectId = new ArrayList<>();
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
 
     public ProfileSystemsKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
 

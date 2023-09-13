@@ -7,7 +7,9 @@ package io.bastillion.manage.control;
 
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSchException;
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ScriptDB;
 import io.bastillion.manage.db.SessionAuditDB;
 import io.bastillion.manage.db.SystemDB;
@@ -73,9 +75,12 @@ public class SecureShellKtrl extends BaseKontroller {
     @Model(name = "script")
     Script script = new Script();
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
 
     public SecureShellKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     public static Map<Long, UserSchSessions> getUserSchSessionMap() {
@@ -223,7 +228,7 @@ public class SecureShellKtrl extends BaseKontroller {
     @Kontrol(path = "/admin/exitTerms", method = MethodType.GET)
     public String exitTerms() {
 
-        return "redirect:/admin/menu.html";
+        return "redirect:/admin/menu.ktrl";
     }
 
     @Kontrol(path = "/admin/disconnectTerm", method = MethodType.GET)
@@ -307,11 +312,11 @@ public class SecureShellKtrl extends BaseKontroller {
                 SchSession schSession = userSchSessions.getSchSessionMap().get(id);
 
                 ChannelShell channel = (ChannelShell) schSession.getChannel();
-                System.out.println("got " + (int) Math.floor(userSettings.getPtyWidth() / 8.0000) + " " + (int) Math.floor(userSettings.getPtyHeight() / 14.4166) + " " + userSettings.getPtyWidth() + " " +  userSettings.getPtyHeight());
+                System.out.println("got " + (int) Math.floor(userSettings.getPtyWidth() / 10.0000) + " " + (int) Math.floor(userSettings.getPtyHeight() / 14.4166) + " " + userSettings.getPtyWidth() + " " +  userSettings.getPtyHeight());
                 //public void setPtySize(int col, int row, int wp, int hp) {
 //                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
                 //channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
-                channel.setPtySize(425,81, 0,0);
+                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 11),(int) Math.floor(userSettings.getPtyHeight() / 14.4166), 0,0);
 //                schSession.setChannel(channel);
 
             }

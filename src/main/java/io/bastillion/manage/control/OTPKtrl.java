@@ -12,6 +12,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.AuthDB;
 import io.bastillion.manage.db.UserDB;
 import io.bastillion.manage.util.OTPUtil;
@@ -51,8 +52,13 @@ public class OTPKtrl extends BaseKontroller {
     @Model(name = "sharedSecret")
     String sharedSecret;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
+
     public OTPKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/viewOTP", method = MethodType.GET)

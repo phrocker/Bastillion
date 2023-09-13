@@ -63,7 +63,7 @@ public class SSHUtil {
     public static final String PRIVATE_KEY = "privateKey";
     public static final String PUBLIC_KEY = "publicKey";
     private static final Logger log = LoggerFactory.getLogger(SSHUtil.class);
-    public static final boolean keyManagementEnabled = "true".equals(AppConfig.getProperty("keyManagementEnabled"));
+    public static final boolean keyManagementEnabled = "false".equals(AppConfig.getProperty("keyManagementEnabled"));
 
     //system path to public/private key
     public static final String KEY_PATH = AppConfig.CONFIG_DIR + "/keydb";

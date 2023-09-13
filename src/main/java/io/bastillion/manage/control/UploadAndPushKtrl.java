@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.SystemStatusDB;
 import io.bastillion.manage.model.HostSystem;
 import io.bastillion.manage.model.SchSession;
@@ -56,9 +58,13 @@ public class UploadAndPushKtrl extends BaseKontroller {
     @Model(name = "currentSystemStatus")
     HostSystem currentSystemStatus;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
 
     public UploadAndPushKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/setUpload", method = MethodType.GET)

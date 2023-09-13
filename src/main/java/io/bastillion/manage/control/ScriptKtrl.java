@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ScriptDB;
 import io.bastillion.manage.model.Script;
 import io.bastillion.manage.model.SortedSet;
@@ -35,8 +37,13 @@ public class ScriptKtrl extends BaseKontroller {
     @Model(name = "script")
     Script script = new Script();
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
+
     public ScriptKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/viewScripts", method = MethodType.GET)

@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.AuthDB;
 import io.bastillion.manage.db.PrivateKeyDB;
 import io.bastillion.manage.db.UserThemeDB;
@@ -38,6 +40,10 @@ public class UserSettingsKtrl extends BaseKontroller {
     private static final Logger log = LoggerFactory.getLogger(UserSettingsKtrl.class);
 
     public static final String REQUIRED = "Required";
+
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
     @Model(name = "themeMap")
     static Map<String, String> themeMap1 = new LinkedHashMap<>(Map.ofEntries(
             entry("Tango", "#2e3436,#cc0000,#4e9a06,#c4a000,#3465a4,#75507b,#06989a,#d3d7cf,#555753,#ef2929,#8ae234,#fce94f,#729fcf,#ad7fa8,#34e2e2,#eeeeec"),
@@ -70,6 +76,7 @@ public class UserSettingsKtrl extends BaseKontroller {
 
     public UserSettingsKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/admin/userSettings", method = MethodType.GET)
@@ -100,7 +107,7 @@ public class UserSettingsKtrl extends BaseKontroller {
                 auth.setAuthToken(AuthUtil.getAuthToken(getRequest()));
 
                 if (AuthDB.updatePassword(auth)) {
-                    retVal = "redirect:/admin/menu.html";
+                    retVal = "redirect:/admin/menu.ktrl";
                 } else {
                     addError("Current password is invalid");
                 }
@@ -126,7 +133,7 @@ public class UserSettingsKtrl extends BaseKontroller {
         }
 
 
-        return "redirect:/admin/menu.html";
+        return "redirect:/admin/menu.ktrl";
     }
 
     /**

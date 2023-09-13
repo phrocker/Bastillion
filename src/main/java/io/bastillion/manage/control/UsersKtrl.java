@@ -5,7 +5,9 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.PublicKeyDB;
 import io.bastillion.manage.db.UserDB;
 import io.bastillion.manage.model.Auth;
@@ -44,9 +46,13 @@ public class UsersKtrl extends BaseKontroller {
     @Model(name = "userId")
     Long userId;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
 
     public UsersKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/manage/viewUsers", method = MethodType.GET)

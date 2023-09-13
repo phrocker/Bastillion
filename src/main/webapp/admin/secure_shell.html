@@ -215,6 +215,7 @@
 
             function notifySize() {
                 var ids = getActiveTermsInstanceIds();
+                console.log("whhaha') " + ids.length)
                 for (var i = 0; i < ids.length; i++) {
                     var w = Math.max(document.documentElement.clientHeight, window.innerWidth || 0);
                     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -284,12 +285,16 @@
 
             function resize(element, width, height) {
                 var id = element.attr("id").replace("output_", "");
-
+                console.log("whhaha')")
                 if (termMap[id]) {
+                    var geometry = current_geometry(termMap[id]);
                     console.log("geometry " + geometry);
+                    var w = Math.floor($('#output_' + id).innerWidth() - 125);
+                    var h = Math.floor($('#output_' + id).innerHeight() - 125);
 
+                    console.log("inner is " + w + " " + h);
                     $.ajax({
-                        url: '../admin/setPtyType.ktrl?id=' + id + '&userSettings.ptyWidth=' + width + '&userSettings.ptyHeight=' + height + '&_csrf=' + [[${session._csrf}]],
+                        url: '../admin/setPtyType.ktrl?id=' + id + '&userSettings.ptyWidth=' + w + '&userSettings.ptyHeight=' + h + '&_csrf=' + [[${session._csrf}]],
                         cache: false
                     });
 //                    $('#terminal .terminal').toggleClass('fullscreen');
@@ -334,7 +339,6 @@
                         if (val.output != '') {
                             if (!termMap[val.instanceId]) {
                                 createTermMap(val.instanceId, val.output);
-                                resetSize();
                             } else {
                                 termMap[val.instanceId].write(val.output);
                             }
@@ -397,6 +401,7 @@
 
                 termMap[id].write(output);
                 fitMap[id].fit();
+                console.log("whhaha')")
                 notifySize();
 
             }
@@ -447,7 +452,7 @@
             //returns div for newly created terminal element
             function createTermElement(instanceId, hostId, displayLabel) {
                 var instance =
-                    "<div id=\"run_cmd_" + instanceId + "\" >"
+                    "<div id=\"run_cmd_" + instanceId + "\"  class=\"run_cmd_active\">"
                     //                    + "<h6 class=\"term-header\">" + displayLabel + "</h6>"
 //                    + "<div class=\"term\">"
                     + "<div id=\"output_" + instanceId + "\" class=\"output\"></div>"
@@ -552,7 +557,7 @@
         }
 
     </style>
-    <title>Bastillion for EC2 - Terminals</title>
+    <title>[[${systemOptions.systemLogoName}]] - Terminals</title>
 </head>
 <body>
 <div class="notification">
@@ -567,7 +572,7 @@
                     <img src="/img/bastillion_40x40.png" th:src="@{/img/bastillion_40x40.png}"
                          alt="bastillion">
                 </div>
-                Bastillion for EC2
+                [[${systemOptions.systemLogoName}]]
             </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                 <span class="navbar-toggler-icon"></span>

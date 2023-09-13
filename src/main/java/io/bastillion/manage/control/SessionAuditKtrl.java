@@ -6,6 +6,8 @@
 package io.bastillion.manage.control;
 
 import com.google.gson.Gson;
+import io.bastillion.common.util.AppConfig;
+import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.SessionAuditDB;
 import io.bastillion.manage.db.SystemDB;
 import io.bastillion.manage.db.UserDB;
@@ -48,8 +50,13 @@ public class SessionAuditKtrl extends BaseKontroller {
     @Model(name = "userList")
     List<User> userList;
 
+    @Model(name = "systemOptions")
+    BastillionOptions systemOptions;
+
+
     public SessionAuditKtrl(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
+        systemOptions = AppConfig.getOptions();
     }
 
     @Kontrol(path = "/manage/viewSessions", method = MethodType.GET)
