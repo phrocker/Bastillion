@@ -51,8 +51,8 @@ public class JITKtrl extends BaseKontroller {
     @Model(name = "jitRequest")
     JITRequest jitRequest = new JITRequest();
 
-    @Model(name = "ruleSelectId")
-    List<Long> ruleSelectId = new ArrayList<>();
+    @Model(name = "jitSelectedRequest")
+    JITRequest jitSelectedRequest = new JITRequest();
 
     @Model(name = "systemOptions")
     BastillionOptions systemOptions;

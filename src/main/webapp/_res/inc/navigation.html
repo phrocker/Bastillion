@@ -49,6 +49,10 @@
                                                                                      th:href="'../manage/viewRules.ktrl?_csrf=' + ${session._csrf}">Manage
                                 Rules</a>
                             </li>
+                            <li th:if="${!#strings.equals(session.userType,'A')}"><a class="dropdown-item"
+                                                                                     th:href="'../manage/viewOpenJIT.ktrl?_csrf=' + ${session._csrf}">Manage
+                                JIT</a>
+                            </li>
                         </template>
                     </ul>
                 </li>
