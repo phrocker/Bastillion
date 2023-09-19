@@ -1,12 +1,10 @@
 package io.bastillion.manage.auditing;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class Auditor extends BaseAuditor {
 
 
-    public Auditor(Long userId, Long sessionId) {
-        super(userId,sessionId);
+    public Auditor(Long userId, Long sessionId, Long systemId) {
+        super(userId,sessionId,systemId);
     }
 
     @Override

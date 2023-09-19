@@ -56,6 +56,12 @@ public class SentOutputTask implements Runnable {
                     String json = gson.toJson(nextWarn);
                     this.session.getBasicRemote().sendText(json);
                 }
+
+                Trigger denial = ShellAuditable.getNextDenial();
+                if (null != denial){
+                    String json = gson.toJson(denial);
+                    this.session.getBasicRemote().sendText(json);
+                }
                 Thread.sleep(25);
                 DBUtils.closeConn(con);
             } catch (SQLException | GeneralSecurityException | IOException | InterruptedException |

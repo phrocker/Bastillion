@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
+import io.bastillion.manage.auditing.ShellAuditable;
+import io.bastillion.manage.auditing.rules.TriggerAction;
 import io.bastillion.manage.control.SecureShellKtrl;
 import io.bastillion.manage.db.UserDB;
 import io.bastillion.manage.model.SchSession;
@@ -91,11 +93,31 @@ public class SecureShellWS {
                     UserSchSessions userSchSessions = SecureShellKtrl.getUserSchSessionMap().get(sessionId);
                     if (userSchSessions != null) {
                         SchSession schSession = userSchSessions.getSchSessionMap().get(id);
+                        if (schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.DENY_ACTION){
+                            ShellAuditable.addWarning(schSession.getTerminalAuditor().getCurrentTrigger());
+                        }
                         if (keyCode != null) {
                             if (keyMap.containsKey(keyCode)) {
-                                schSession.getCommander().write(keyMap.get(keyCode));
+
+                                if (keyCode == 13 &&
+                                        schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.DENY_ACTION
+                            || schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.JIT_ACTION) {
+                                    // don't allow command to be processed
+                                    schSession.getTerminalAuditor().keycode(keyCode);
+                                    if (schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.DENY_ACTION
+                                            || schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.JIT_ACTION) {
+                                        keyCode = 67;
+                                    }
+                                    schSession.getCommander().write(keyMap.get(keyCode));
+                                    schSession.getTerminalAuditor().clear(); // clear in case
+                                }
+                                else {
+                                    schSession.getCommander().write(keyMap.get(keyCode));
+                                    schSession.getTerminalAuditor().keycode(keyCode);
+                                    schSession.getTerminalAuditor().clear(); // clear in case
+                                }
                             }
-                            schSession.getTerminalAuditor().keycode(keyCode);
+
                         } else {
                             schSession.getTerminalAuditor().append(command);
                             schSession.getCommander().print(command);
@@ -137,6 +159,7 @@ public class SecureShellWS {
                     schSession.setInputToChannel(null);
                     schSession.setCommander(null);
                     schSession.setOutFromChannel(null);
+                    schSession.getTerminalAuditor().shutdown();
                     schSession = null;
                     //remove from map
                     schSessionMap.remove(sessionKey);

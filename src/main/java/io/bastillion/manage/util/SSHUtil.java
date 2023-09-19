@@ -15,7 +15,6 @@ import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import io.bastillion.common.util.AppConfig;
-import io.bastillion.manage.auditing.Auditor;
 import io.bastillion.manage.auditing.RuleAlertAuditor;
 import io.bastillion.manage.db.AuditingRulesDB;
 import io.bastillion.manage.db.PrivateKeyDB;
@@ -503,8 +502,8 @@ public class SSHUtil {
             schSession.setOutFromChannel(outFromChannel);
             schSession.setHostSystem(hostSystem);
             List<Rule> rules = AuditingRulesDB.getSystemRules( hostSystem.getId() );
-            RuleAlertAuditor terminalAuditor = new RuleAlertAuditor(userId,sessionId);
-            terminalAuditor.setRules(rules);
+            RuleAlertAuditor terminalAuditor = new RuleAlertAuditor(userId,sessionId,hostSystem.getId());
+            terminalAuditor.setSynchronousRules(rules);
             schSession.setTerminalAuditor(terminalAuditor);
 
             //refresh keys for session

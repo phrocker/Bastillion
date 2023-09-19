@@ -42,10 +42,6 @@ public class SecureShellTask implements Runnable {
         int read;
         try {
             while ((read = br.read(buff)) != -1) {
-                if (read != 0){
-                    System.out.println("got count " + read);
-                }
-
                 SessionOutputUtil.addToOutput(sessionOutput.getSessionId(), sessionOutput.getInstanceId(), buff, 0, read);
                 Thread.sleep(50);
             }

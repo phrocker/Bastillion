@@ -11,7 +11,9 @@ import io.bastillion.manage.model.Profile;
 import io.bastillion.manage.model.ProfileRule;
 import io.bastillion.manage.model.Rule;
 import io.bastillion.manage.model.SortedSet;
+import io.bastillion.manage.model.User;
 import io.bastillion.manage.util.DBUtils;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.GeneralSecurityException;
@@ -20,7 +22,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -40,6 +44,9 @@ public class SystemDB {
     public static final String STATUS_CD = "status_cd";
     public static final String PROFILE_ID = "profile_id";
     public static final String SORT_BY_STATUS = STATUS_CD;
+
+
+    private static final Map<Long, HostSystem> systemMap = Collections.synchronizedMap(new LRUMap<>());
 
     private SystemDB() {
     }
@@ -189,9 +196,13 @@ public class SystemDB {
      */
     public static HostSystem getSystem(Long id) throws SQLException, GeneralSecurityException {
 
-        Connection con = DBUtils.getConn();
-        HostSystem hostSystem = getSystem(con, id);
-        DBUtils.closeConn(con);
+        HostSystem hostSystem = systemMap.get(id);
+        if (null == hostSystem) {
+            Connection con = DBUtils.getConn();
+            hostSystem = getSystem(con, id);
+            DBUtils.closeConn(con);
+            systemMap.put(id,hostSystem);
+        }
 
         return hostSystem;
     }

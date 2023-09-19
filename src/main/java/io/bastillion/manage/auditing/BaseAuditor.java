@@ -1,6 +1,8 @@
 package io.bastillion.manage.auditing;
 
 import io.bastillion.manage.auditing.rules.AuditorRule;
+import io.bastillion.manage.auditing.rules.Trigger;
+import io.bastillion.manage.auditing.rules.TriggerAction;
 import io.bastillion.manage.model.Rule;
 
 import java.lang.reflect.InvocationTargetException;
@@ -11,20 +13,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class BaseAuditor {
 
 
-    private final Long userId;
-    private final Long sessionId;
-    StringBuilder builder = new StringBuilder();
+    protected final Long userId;
+    protected final Long sessionId;
+
+    protected final Long systemId;
+
+    protected Trigger currentTrigger = Trigger.NO_ACTION;
+
+    StringBuilder builder = new StringBuilder(127);
 
     AtomicBoolean receiveFromServer = new AtomicBoolean(false);
 
-    public BaseAuditor(Long userId, Long sessionId) {
+    public BaseAuditor(Long userId, Long sessionId, Long systemId) {
         this.userId = userId;
         this.sessionId = sessionId;
+        this.systemId = systemId;
     }
 
     public synchronized String clear(){
         String currentOutput = this.builder.toString();
-        this.builder = new StringBuilder();
+        this.builder.setLength(0);
+        //this.builder = new StringBuilder();
         return currentOutput;
     }
 
@@ -74,7 +83,13 @@ public abstract class BaseAuditor {
                 backspace();
                 break;
             case 13:
-                System.out.println("on message " + get().toString());
+                submit(get());
+                break;
+            case 38:
+            case 48:
+                clear();
+                setReceiveFromServer();
+                break;
             case 67:
                 clear();
             default:
@@ -83,5 +98,15 @@ public abstract class BaseAuditor {
         }
     }
 
+    protected synchronized void submit(String command){
+        System.out.println("on message " + command);
 
+    }
+    public void shutdown(){
+        // nothing to do here
+    }
+
+    public Trigger getCurrentTrigger(){
+        return currentTrigger;
+    }
 }

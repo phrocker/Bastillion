@@ -46,7 +46,7 @@
                                 SSH Keys</a>
                             </li>
                             <li th:if="${!#strings.equals(session.userType,'A')}"><a class="dropdown-item"
-                                                                                     th:href="'../admin/ruleSettings.ktrl?_csrf=' + ${session._csrf}">Manage
+                                                                                     th:href="'../manage/viewRules.ktrl?_csrf=' + ${session._csrf}">Manage
                                 Rules</a>
                             </li>
                         </template>

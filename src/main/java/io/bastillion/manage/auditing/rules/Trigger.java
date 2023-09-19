@@ -2,6 +2,7 @@ package io.bastillion.manage.auditing.rules;
 
 public class Trigger {
 
+    public static Trigger NO_ACTION = new Trigger(TriggerAction.NO_ACTION,"");
     TriggerAction action;
 
     String description;

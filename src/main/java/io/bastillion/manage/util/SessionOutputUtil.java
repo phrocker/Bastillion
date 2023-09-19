@@ -101,7 +101,7 @@ public class SessionOutputUtil {
             SchSession schSession = userSchSessions.getSchSessionMap().get(instanceId);
             if (null != schSession){
                 if (schSession.getTerminalAuditor().shouldReceiveFromServer()){
-                    schSession.getTerminalAuditor().receiveFromServer(new String(value,offset,count));
+                    schSession.getTerminalAuditor().receiveFromServer(new String(value,offset,count).trim());
                 }
             }
         }

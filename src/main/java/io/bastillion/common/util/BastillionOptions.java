@@ -1,16 +1,21 @@
 package io.bastillion.common.util;
 
-import loophole.mvc.annotation.Model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BastillionOptions {
 
-    String systemLogoName = "Bastillion";
+    @Builder.Default
+    public String systemLogoName = "Bastillion";
 
-    public String getSystemLogoName() {
-        return systemLogoName;
-    }
+    @Builder.Default
+    public boolean jitRequiresTicket = false;
 
-    public void setSystemLogoName(String systemLogoName){
-        this.systemLogoName=systemLogoName;
-    }
+    @Builder.Default
+    public Integer approvedJITPeriod = 60;
 }

@@ -121,6 +121,14 @@ public class DBInitServlet extends javax.servlet.http.HttpServlet {
                 statement.executeUpdate("create table if not exists terminal_log (session_id BIGINT, instance_id INTEGER, output varchar not null, log_tm timestamp default CURRENT_TIMESTAMP, display_nm varchar not null, username varchar not null, host varchar not null, port INTEGER not null, foreign key (session_id) references session_log(id) on delete cascade)");
 
 
+
+                // jit information
+                statement.executeUpdate("create table if not exists jit_reasons (id BIGINT PRIMARY KEY AUTO_INCREMENT, command_need varchar not null, reason_identifier varchar, url varchar)");
+                statement.executeUpdate("create table if not exists jit_requests (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, system_id BIGINT, command varchar not null, command_hash varchar not null, jit_reason_id BIGINT, last_updated timestamp default CURRENT_TIMESTAMP,  foreign key (user_id) references users(id), foreign key (jit_reason_id) references jit_reasons(id), foreign key (system_id) references system(id))");
+                //log_tm timestamp default CURRENT_TIMESTAMP, approved boolean not null default false
+                statement.executeUpdate("create table if not exists jit_approvals (id BIGINT PRIMARY KEY AUTO_INCREMENT, approver_id BIGINT, jit_request_id BIGINT, approved boolean not null default false, last_updated timestamp default CURRENT_TIMESTAMP,  foreign key (approver_id) references users(id), foreign key (jit_request_id) references jit_requests(id))");
+
+
                 //if exists readfile to set default password
                 String salt = EncryptionUtil.generateSalt();
                 String defaultPassword = EncryptionUtil.hash("changeme" + salt);

@@ -1,0 +1,192 @@
+<!--/**
+ *    Copyright (C) 2013 Loophole, LLC
+ *
+ *    Licensed under The Prosperity Public License 3.0.0
+ */-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta th:replace="_res/inc/header">
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            $("#view_btn").button().click(function () {
+                $("#viewRules").submit();
+            });
+
+            //call delete action
+            $(".den_btn").button().click(function () {
+                var id = $(this).attr('id').replace("den_btn_", "");
+                window.location = '/manage/denyJIT.ktrl?jitRequest.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
+                    + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+
+            $(".up_den_btn").button().click(function () {
+                var id = $(this).attr('id').replace("up_den_btn_", "");
+                window.location = '/manage/denyJIT.ktrl?jitRequest.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
+                    + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+
+            $(".app_btn").button().click(function () {
+                var id = $(this).attr('id').replace("app_btn_", "");
+                window.location = '/manage/approveJIT.ktrl?jitRequest.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
+                    + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+
+            //submit add or edit form
+            $(".submit_btn").button().click(function () {
+                $(this).parents('.modal').find('form').submit();
+            });
+
+            $(".sort,.sortAsc,.sortDesc").click(function () {
+                var id = $(this).attr('id');
+
+                var orderDirection = $('#viewRules_sortedSet_orderByDirection');
+                if (orderDirection.attr('value') === 'asc') {
+                    orderDirection.attr('value', 'desc');
+                } else {
+                    orderDirection.attr('value', 'asc');
+                }
+
+                $('#viewRules_sortedSet_orderByField').attr('value', id);
+                $("#viewRules").submit();
+
+            });
+
+            [# th:if= "${!#strings.isEmpty(sortedSet.orderByField)}"]
+                $('#' + [[${sortedSet.orderByField}]]).attr('class', [[${sortedSet.orderByDirection}]]);
+            [/]
+
+        });
+        /*]]>*/
+
+    </script>
+    <script th:inline="javascript" th:if="${!#maps.isEmpty(fieldErrors) || !errors.empty}">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            [# th:if= "${rule.id > 0}"]
+                new bootstrap.Modal($('#edit_dialog_' + [[${rule.id}]]).show();
+            [/]
+
+            [# th:if= "${rule.id <= 0}"]
+                new bootstrap.Modal($("#add_dialog")).show();
+            [/]
+        });
+        /*]]>*/
+
+    </script>
+
+    <title>[[${systemOptions.systemLogoName}]] - JIT Management</title>
+</head>
+
+<body>
+<div th:replace="_res/inc/navigation"></div>
+<div class="container">
+    <form id="viewRules" th:action="@{/manage/viewRules.ktrl}" method="get">
+        <input type="hidden" name="_csrf" th:value="${session._csrf}">
+        <input type="hidden" id="viewRules_sortedSet_orderByDirection" name="sortedSet.orderByDirection"
+               th:value="${sortedSet.orderByDirection}">
+        <input type="hidden" id="viewRules_sortedSet_orderByField" name="sortedSet.orderByField"
+               th:value="${sortedSet.orderByField}">
+        <h3>Open JIT Requests</h3>
+    </form>
+    <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
+        <table class="table-striped scrollableTable">
+            <thead>
+            <tr>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_NAME}" class="sort">Command</th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CLASS}"
+                    class="sort">User
+                </th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CONFIG}"
+                    class="sort">System
+                </th>
+                <th>Operations </th>
+            </tr>
+            </thead>
+            <tbody>
+            <template th:each="s : ${sortedSet.itemList}" th:remove="tag">
+                <tr>
+                    <td>
+                        <div th:id="'status_' + ${s.id}" th:text="${s.command}"></div>
+                    </td>
+                    <td th:text="${s.user.username}"></td>
+                    <td th:text="${s.hostSystem.displayNm}"></td>
+                    <td>
+                        <div>
+                            <!--
+                            <button class="btn btn-secondary spacer spacer-middle" data-bs-toggle="modal"
+                                    th:attr="data-bs-target='#edit_dialog_' + ${s.id}">Approve
+                            </button>
+                            -->
+                            <button th:id="'app_btn_' + ${s.id}"
+                                    class="btn btn-secondary app_btn spacer spacer-right">Approve
+                            </button>
+                            <button th:id="'den_btn_' + ${s.id}"
+                                    class="btn btn-secondary den_btn spacer spacer-right">Deny
+                            </button>
+                            </a>
+                            <div style="clear:both"></div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<div class="container">
+    <h3>Approved JIT Requests</h3>
+    <div class="scrollWrapper" th:if="${approvedSortedSet.itemList != null && !approvedSortedSet.itemList.empty}">
+        <table class="table-striped scrollableTable">
+            <thead>
+            <tr>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_NAME}" class="sort">Command</th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CLASS}"
+                    class="sort">User
+                </th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CONFIG}"
+                    class="sort">System
+                </th>
+                <th>Operations </th>
+            </tr>
+            </thead>
+            <tbody>
+            <template th:each="s : ${approvedSortedSet.itemList}" th:remove="tag">
+                <tr>
+                    <td>
+                        <div th:id="'status_' + ${s.id}" th:text="${s.command}"></div>
+                    </td>
+                    <td th:text="${s.user.username}"></td>
+                    <td th:text="${s.hostSystem.displayNm}"></td>
+                    <td>
+                        <div>
+                            <!--
+                            <button class="btn btn-secondary spacer spacer-middle" data-bs-toggle="modal"
+                                    th:attr="data-bs-target='#edit_dialog_' + ${s.id}">Approve
+                            </button>
+                            -->
+                            <button th:id="'up_den_btn_' + ${s.id}"
+                                    class="btn btn-secondary up_den_btn spacer spacer-right">Deny
+                            </button>
+                            </a>
+                            <div style="clear:both"></div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+
+</html>

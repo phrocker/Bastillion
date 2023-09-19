@@ -17,8 +17,14 @@ import javax.websocket.EndpointConfig;
 import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 
 /**
@@ -28,6 +34,7 @@ public class AuthUtil {
 
     public static final String SESSION_ID = "sessionId";
     public static final String USER_ID = "userId";
+    public static final String WAITING_JITS = "waitingJits";
     public static final String USERNAME = "username";
     public static final String AUTH_TOKEN = "authToken";
     public static final String TIMEOUT = "timeout";
@@ -188,6 +195,47 @@ public class AuthUtil {
         return userId;
     }
 
+    /**
+     * query session for user id
+     *
+     * @param request http request
+     * @return user id
+     */
+    public static Set<Long> getWaitingJITs(HttpServletRequest request) throws GeneralSecurityException {
+        Set<Long> jits = new HashSet<>();
+        String jitStr = EncryptionUtil.decrypt(getCookie(request,WAITING_JITS));
+        if (jitStr != null && !jitStr.trim().equals("")) {
+            jits = Arrays.stream(jitStr.split(",")).map(x-> Long.valueOf(x)).collect(Collectors.toSet());
+        }
+        return jits;
+    }
+
+    private static void setJIT(HttpServletResponse response, Set<Long> jits) throws GeneralSecurityException {
+        Cookie cookie = new Cookie(WAITING_JITS,  EncryptionUtil.encrypt( jits.stream().map(x -> x.toString()).collect(Collectors.joining(","))));
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+    }
+
+    public static Set<Long> addJIT(HttpServletRequest request, HttpServletResponse response, Long id) throws GeneralSecurityException {
+        Set<Long> jits = getWaitingJITs(request);
+        jits.add(id);
+        setJIT(response,jits);
+        return jits;
+    }
+    /**
+     * query session for user id
+     *
+     * @param request http request
+     * @return user id
+     */
+    public static Set<Long> removeJIT(HttpServletRequest request, HttpServletResponse response, Long id) throws GeneralSecurityException {
+        Set<Long> jits = getWaitingJITs(request);
+        jits.remove(id);
+        setJIT(response,jits);
+        return jits;
+    }
+
     public static Long getUserId(EndpointConfig request) throws GeneralSecurityException {
         Long userId = null;
         String userIdStr = EncryptionUtil.decrypt(getCookie(request,USER_ID));
@@ -282,7 +330,7 @@ public class AuthUtil {
     /**
      * set session authentication token
      *
-     * @param request   http session
+     * @param response   http session
      * @param authToken authentication token
      */
     public static void setAuthToken(HttpServletResponse response, String authToken) throws GeneralSecurityException {

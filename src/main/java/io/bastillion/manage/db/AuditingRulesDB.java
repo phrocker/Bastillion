@@ -201,6 +201,7 @@ public class AuditingRulesDB {
         stmt.setString(1, rule.getDisplayNm());
         stmt.setString(2, rule.getRuleClass());
         stmt.setString(3, rule.getRuleConfig());
+        stmt.setLong(4, rule.getId());
         stmt.execute();
         DBUtils.closeStmt(stmt);
         DBUtils.closeConn(con);

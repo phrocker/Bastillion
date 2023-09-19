@@ -88,6 +88,14 @@ public class AppConfig {
         return value;
     }
 
+    private static Integer getProperty(String approvedJITPeriod, int i) {
+        String prop = getProperty(approvedJITPeriod);
+        if (StringUtils.isEmpty(prop)) {
+            return i;
+        }
+        return Integer.valueOf(prop);
+    }
+
     /**
      * gets the property from config and replaces placeholders
      *
@@ -187,11 +195,15 @@ public class AppConfig {
         if (null == options){
             synchronized (AppConfig.class){
                 if (null == options) {
-                    options = new BastillionOptions();
-                    options.systemLogoName = getProperty("systemLogoName", "Bastillion");
+                    options = BastillionOptions.builder()
+                            .systemLogoName(getProperty("systemLogoName", "Bastillion"))
+                            .approvedJITPeriod(getProperty("approvedJITPeriod", 60))
+                            .build();
                 }
             }
         }
         return options;
     }
+
+
 }

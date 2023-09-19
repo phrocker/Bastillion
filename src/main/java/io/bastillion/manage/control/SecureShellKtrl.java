@@ -6,7 +6,6 @@
 package io.bastillion.manage.control;
 
 import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSchException;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
 import io.bastillion.common.util.BastillionOptions;

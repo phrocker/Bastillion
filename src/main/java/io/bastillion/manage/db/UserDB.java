@@ -10,6 +10,7 @@ import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.model.User;
 import io.bastillion.manage.util.DBUtils;
 import io.bastillion.manage.util.EncryptionUtil;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.GeneralSecurityException;
@@ -22,7 +23,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 
 import static io.bastillion.manage.db.AuthDB.EXPIRATION_DAYS;
 
@@ -42,6 +45,8 @@ public class UserDB {
     public static final String PROFILE_ID = "profile_id";
     public static final String LAST_LOGIN_TM = "last_login_tm";
     public static final String EXPIRATION_TM = "expiration_tm";
+
+    private static final Map<Long, User> userMap = Collections.synchronizedMap(new LRUMap<>());
 
     private UserDB() {
     }
@@ -144,10 +149,13 @@ public class UserDB {
      * @return user object
      */
     public static User getUser(Long userId) throws SQLException, GeneralSecurityException {
-
-        Connection con = DBUtils.getConn();
-        User user = getUser(con, userId);
-        DBUtils.closeConn(con);
+        User user = userMap.get(userId);
+        if (null == user) {
+            Connection con = DBUtils.getConn();
+            user = getUser(con, userId);
+            DBUtils.closeConn(con);
+            userMap.put(userId,user);
+        }
 
         return user;
     }
