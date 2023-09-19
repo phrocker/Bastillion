@@ -206,6 +206,45 @@ public class JITProcessingDB {
         return requests;
     }
 
+    public static List<JITTracker> getDeniedJITs(SortedSet sortedSet) throws SQLException, GeneralSecurityException {
+
+        String orderBy = "";
+        if (sortedSet.getOrderByField() != null && !sortedSet.getOrderByField().trim().equals("")) {
+            orderBy = "order by " + sortedSet.getOrderByField() + " " + sortedSet.getOrderByDirection();
+        }
+        else{
+            orderBy = "order by last_updated desc";
+        }
+
+        String sql = "select j.id,j.command,j.user_id,j.system_id,j.jit_reason_id,r.command_need,r.reason_identifier,r.url, j.last_updated from jit_requests j left join jit_reasons r on r.id = j.jit_reason_id left join jit_approvals a on a.jit_request_id=j.id where a.approved=false " + orderBy;
+        //get user for auth token
+        Connection con = DBUtils.getConn();
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        ResultSet rs = stmt.executeQuery();
+        List<JITTracker> requests = new ArrayList<>();
+        while (rs.next()) {
+            JITRequestLink jrl = JITRequestLink.builder().identifier(rs.getString(7)).uri(rs.getString(8)).build();
+            JITReason reason = JITReason.builder().id(rs.getLong(5)).commandNeed(rs.getString(6)).requestLink(jrl).build();
+
+            JITTracker request = JITTracker.builder().id( rs.getLong(1))
+                    .reason(reason).systemId(rs.getLong(4))
+                    .userId(rs.getLong(3)).command(rs.getString(2))
+                    .user(UserDB.getUser(rs.getLong(3)))
+                    .hostSystem(SystemDB.getSystem(rs.getLong(4)))
+                    .build();
+            Timestamp ts = rs.getTimestamp(9);
+            System.out.println("3 Last updated for "  + rs.getLong(1) + " is " + ts.getTime());
+            requests.add( request );
+        }
+        DBUtils.closeRs(rs);
+        DBUtils.closeStmt(stmt);
+        DBUtils.closeConn(con);
+
+        return requests;
+    }
+
+
     public static List<JITTracker> getApprovedJITs(SortedSet sortedSet) throws SQLException, GeneralSecurityException {
 
         String orderBy = "";

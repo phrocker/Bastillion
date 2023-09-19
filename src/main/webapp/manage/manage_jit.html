@@ -13,7 +13,11 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         $(document).ready(function () {
-            $("#view_btn").button().click(function () {
+            [# th:if= "${jitRequest.id > 0}"]
+            new bootstrap.Modal($('#view_dialog_' + [[${profile.id}]])).show();
+            [/]
+
+                $("#view_btn").button().click(function () {
                 $("#viewRules").submit();
             });
 
@@ -28,6 +32,13 @@
             $(".up_den_btn").button().click(function () {
                 var id = $(this).attr('id').replace("up_den_btn_", "");
                 window.location = '/manage/denyJIT.ktrl?jitRequest.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
+                    + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+
+            $(".up_app_btn").button().click(function () {
+                var id = $(this).attr('id').replace("up_app_btn_", "");
+                window.location = '/manage/approveJIT.ktrl?jitRequest.id=' + id + '&sortedSet.orderByDirection=' + /*[[${sortedSet.orderByDirection}]]*/ ''
                     + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
                     + '&_csrf=' + [[${session._csrf}]];
             });
@@ -187,6 +198,133 @@
     </div>
 
 </div>
+
+<div class="container">
+    <h3>Denied JIT Requests</h3>
+    <div class="scrollWrapper" th:if="${deniedSortedSet.itemList != null && !deniedSortedSet.itemList.empty}">
+        <table class="table-striped scrollableTable">
+            <thead>
+            <tr>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_NAME}" class="sort">Command</th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CLASS}"
+                    class="sort">User
+                </th>
+                <th th:id="${@io.bastillion.manage.db.AuditingRulesDB@SORT_BY_CONFIG}"
+                    class="sort">System
+                </th>
+                <th>Operations </th>
+            </tr>
+            </thead>
+            <tbody>
+            <template th:each="s : ${deniedSortedSet.itemList}" th:remove="tag">
+                <tr>
+                    <td>
+                        <div th:id="'status_' + ${s.id}" th:text="${s.command}"></div>
+                    </td>
+                    <td th:text="${s.user.username}"></td>
+                    <td th:text="${s.hostSystem.displayNm}"></td>
+                    <td>
+                        <div>
+                            <!--
+                            <button class="btn btn-secondary spacer spacer-middle" data-bs-toggle="modal"
+                                    th:attr="data-bs-target='#edit_dialog_' + ${s.id}">Approve
+                            </button>
+                            -->
+                            <button class="btn btn-secondary spacer spacer-middle"
+                                    data-bs-toggle="modal" th:attr="data-bs-target='#view_dialog_' + ${s.id}">View
+                            </button>
+
+                            <button th:id="'up_app_btn_' + ${s.id}"
+                                    class="btn btn-secondary up_den_btn spacer spacer-right">Approve
+                            </button>
+                            </a>
+                            <div style="clear:both"></div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<template th:each="jr : ${sortedSet.itemList}" th:remove="tag">
+    <div th:id="'view_dialog_' + ${jr.id}" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">View JIT Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div th:replace="_res/inc/errors"></div>
+                        <tr>
+                            <td th:text="${jr.command}"></td>
+                        </tr>
+                        <tr>
+                            <td th:text="${jr.reason.commandNeed}"></td>
+                        </tr>
+                            <td th:text="${jr.reason.requestLink.identifier}"></td>
+                        </tr>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<template th:each="jr : ${deniedSortedSet.itemList}" th:remove="tag">
+    <div th:id="'view_dialog_' + ${jr.id}" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" th:text="'JIT Request from ' + ${jr.user.username}"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!--
+                    <table class="table-striped scrollableTable">
+                        <thead>
+                        <tr>
+                            <th>Command</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td th:text="${jr.command}"></td>
+                        </tr>
+                        <tr>
+                            <td th:text="${jr.reason.commandNeed}"></td>
+                        </tr>
+                        <td th:text="${jr.reason.requestLink.identifier}"></td>
+                        </tr>
+                    </tbody>
+                    </table>
+                    -->
+                    <div class="row">
+                        Command: 
+                        <td th:text="${jr.command}"></td>
+                        </div>
+                    <div class="row">
+                        <div th:replace="_res/inc/errors"></div>
+                        Reason Provided:
+                        <td th:text="${jr.reason.commandNeed}"></td>
+                    </div>
+                    <div class="row">
+                        <td th:text="${jr.reason.requestLink.identifier}"></td>
+                        </tr>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary cancel_btn" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 </body>
 
 </html>

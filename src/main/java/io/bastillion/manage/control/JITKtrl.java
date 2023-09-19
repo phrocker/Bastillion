@@ -44,6 +44,10 @@ public class JITKtrl extends BaseKontroller {
 
     @Model(name = "approvedSortedSet")
     SortedSet approvedSortedSet = new SortedSet();
+
+    @Model(name = "deniedSortedSet")
+    SortedSet deniedSortedSet = new SortedSet();
+
     @Model(name = "jitRequest")
     JITRequest jitRequest = new JITRequest();
 
@@ -83,6 +87,9 @@ public class JITKtrl extends BaseKontroller {
 
             List<JITTracker> approvedJITs = JITProcessingDB.getApprovedJITs(approvedSortedSet);
             approvedSortedSet.setItemList(approvedJITs);
+
+            List<JITTracker> deniedJITs = JITProcessingDB.getDeniedJITs(deniedSortedSet);
+            deniedSortedSet.setItemList(deniedJITs);
         } catch (SQLException | GeneralSecurityException ex) {
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
