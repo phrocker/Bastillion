@@ -315,7 +315,7 @@ public class SecureShellKtrl extends BaseKontroller {
                 //public void setPtySize(int col, int row, int wp, int hp) {
 //                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
                 //channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 7.2981), (int) Math.floor(userSettings.getPtyHeight() / 17), userSettings.getPtyWidth(), userSettings.getPtyHeight());
-                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 11),(int) Math.floor(userSettings.getPtyHeight() / 14.4166), 0,0);
+                channel.setPtySize((int) Math.floor(userSettings.getPtyWidth() / 11),(int) Math.floor(userSettings.getPtyHeight() / 17), 0,0);
 //                schSession.setChannel(channel);
 
             }

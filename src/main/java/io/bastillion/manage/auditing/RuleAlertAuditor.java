@@ -171,14 +171,19 @@ public class RuleAlertAuditor extends BaseAuditor {
     }
 
     @Override
-    public synchronized String clear(){
-        System.out.println("Clear action");
-        currentTrigger=Trigger.NO_ACTION;
-        return super.clear();
+    public synchronized String clear(int keycode){
+
+        if (keycode == 13 && currentTrigger.getAction() == TriggerAction.DENY_ACTION) {
+            System.out.println("no change");
+        }
+        else {
+            currentTrigger = Trigger.NO_ACTION;
+        }
+        return super.clear(keycode);
     }
 
     @Override
-    protected synchronized  void submit(String command){
+    protected synchronized  TriggerAction submit(String command){
         //currentTrigger
 
 
@@ -220,6 +225,6 @@ public class RuleAlertAuditor extends BaseAuditor {
         else{
             System.out.println("on message " + command);
         }
-
+        return currentTrigger.getAction();
     }
 }

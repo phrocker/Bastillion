@@ -30,7 +30,7 @@ public abstract class BaseAuditor {
         this.systemId = systemId;
     }
 
-    public synchronized String clear(){
+    public synchronized String clear(int keycode){
         String currentOutput = this.builder.toString();
         this.builder.setLength(0);
         //this.builder = new StringBuilder();
@@ -83,23 +83,26 @@ public abstract class BaseAuditor {
                 backspace();
                 break;
             case 13:
-                submit(get());
+                if ( submit(get()) == TriggerAction.NO_ACTION){
+                    clear(13);
+                }
                 break;
             case 38:
             case 48:
-                clear();
+                clear(48);
                 setReceiveFromServer();
                 break;
             case 67:
-                clear();
+                clear(67);
             default:
                 break;
 
         }
     }
 
-    protected synchronized void submit(String command){
+    protected synchronized TriggerAction submit(String command){
         System.out.println("on message " + command);
+        return TriggerAction.NO_ACTION;
 
     }
     public void shutdown(){

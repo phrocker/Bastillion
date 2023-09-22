@@ -106,15 +106,18 @@ public class SecureShellWS {
                                     schSession.getTerminalAuditor().keycode(keyCode);
                                     if (schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.DENY_ACTION
                                             || schSession.getTerminalAuditor().getCurrentTrigger().getAction() == TriggerAction.JIT_ACTION) {
+                                        System.out.println("Control c");
                                         keyCode = 67;
                                     }
+                                    else{
+                                        System.out.println("enter");
+                                    }
                                     schSession.getCommander().write(keyMap.get(keyCode));
-                                    schSession.getTerminalAuditor().clear(); // clear in case
+                                    schSession.getTerminalAuditor().clear(0); // clear in case
                                 }
                                 else {
                                     schSession.getCommander().write(keyMap.get(keyCode));
                                     schSession.getTerminalAuditor().keycode(keyCode);
-                                    schSession.getTerminalAuditor().clear(); // clear in case
                                 }
                             }
 

@@ -113,7 +113,8 @@
 
                 [# th:if= "${pendingSystemStatus == null || pendingSystemStatus.id == null}"]
 
-            $('#dummy').focus();
+            //$('#dummy').focus();
+            //$("#run_cmd_0").focus();
             var keys = {};
 
             var termFocus = true;
@@ -129,6 +130,8 @@
                         connection.send(JSON.stringify({id: getActiveTermsInstanceIds(), command: cmdStr}));
                     }
 
+                }else{
+                    console.log("no term focus");
                 }
             });
             //function for command keys (ie ESC, CTRL, etc..)
@@ -162,6 +165,8 @@
                         e.stopImmediatePropagation();
                     }
 
+                }else{
+                    console.log("no term focus2");
                 }
 
             });
@@ -170,21 +175,26 @@
                 var keyCode = (e.keyCode) ? e.keyCode : e.charCode;
                 delete keys[keyCode];
                 if (termFocus) {
-                    $('#dummy').focus();
+                    console.log(document.activeElement)
+                    console.log("termfocus");
+                    //$("#run_cmd_0").focus();
+                    //$('#dummy').focus();
                 }
             });
 
             $(document).click(function (e) {
                 if (termFocus && !$('body').hasClass('modal-open')) {
-                    $('#dummy').focus();
+                    //$('#dummy').focus();
+                   // $("#run_cmd_0").focus();
                 }
             });
 
 
             //get cmd text from paste
             $(this).bind('paste', function (e) {
-                $('#dummy').focus();
-                $('#dummy').val('');
+                //$('#dummy').focus();
+                $("#run_cmd_0").focus();
+                //$('#dummy').val('');
                 setTimeout(function () {
                     var cmdStr = $('#dummy').val();
                     connection.send(JSON.stringify({id: getActiveTermsInstanceIds(), command: cmdStr}));
@@ -290,7 +300,7 @@
                     var geometry = current_geometry(termMap[id]);
                     console.log("geometry " + geometry);
                     var w = Math.floor($('#output_' + id).innerWidth() - 125);
-                    var h = Math.floor($('#output_' + id).innerHeight() - 125);
+                    var h = Math.floor($('#output_' + id).innerHeight() - 250);
 
                     console.log("inner is " + w + " " + h);
                     $.ajax({
@@ -298,6 +308,7 @@
                         cache: false
                     });
 //                    $('#terminal .terminal').toggleClass('fullscreen');
+                    fitMap[id].fit();
                 }
 
             }
@@ -401,6 +412,7 @@
 
                 termMap[id].write(output);
                 fitMap[id].fit();
+
                 console.log("whhaha')")
                 notifySize();
 
@@ -412,20 +424,35 @@
                 //if terminal window toggle active for commands
                 element.mousedown(function (e) {
                     //check for cmd-click / ctr-click
+                    /*
                     if (!e.ctrlKey && !e.metaKey) {
                         $(".run_cmd").removeClass('run_cmd_active');
-                    }
-
-                    if (element.hasClass('run_cmd_active')) {
-                        element.removeClass('run_cmd_active');
-                    } else {
+                    }else{
                         element.addClass('run_cmd_active')
                     }
+*/
+                    /*
+                    if (element.hasClass('run_cmd_active')) {
+                        element.removeClass('run_cmd_active');
+                    } else {*/
+                      //  element.addClass('run_cmd_active')
+                   // }
+                    console.log(document.activeElement)
+                    console.log("mousedown");
+                    //element.focus();
                 });
 
                 //set focus to term
                 $(".output").mouseup(function (e) {
                         termFocus = true;
+                    //element.focus();
+                    document.focus()
+                    console.log("mouseup setting focus to doc");
+                });
+                $(".output").mousedown(function (e) {
+                    termFocus = true;
+                   // $(".output").focus();
+                    console.log("mousedown2");
                 });
 
                 $('.ter').toggleClass('fullscreen');
@@ -449,6 +476,61 @@
                  */
             }
 
+            function setTerminalEvents(element, id) {
+
+                //if terminal window toggle active for commands
+                element.mousedown(function (e) {
+                    //check for cmd-click / ctr-click
+                    /*
+                    if (!e.ctrlKey && !e.metaKey) {
+                        $(".run_cmd").removeClass('run_cmd_active');
+                    }else{
+                        element.addClass('run_cmd_active')
+                    }
+*/
+                    /*
+                    if (element.hasClass('run_cmd_active')) {
+                        element.removeClass('run_cmd_active');
+                    } else {*/
+                    //  element.addClass('run_cmd_active')
+                    // }
+                    console.log("mousedown");
+                    //element.focus();
+                });
+
+                //set focus to term
+                $(".output").mouseup(function (e) {
+                    termFocus = true;
+                    //element.focus();
+                    $('#dummy').focus();
+                    console.log("mouseup2");
+                });
+                $(".output").mousedown(function (e) {
+                    termFocus = true;
+                  //  termMap[id].focus()
+                    console.log("mousedown2");
+                });
+
+                $('.ter').toggleClass('fullscreen');
+
+                $(".output").bind('copy', function () {
+                    setTimeout(function () {
+                        termFocus = true;
+                        window.getSelection().removeAllRanges();
+                    }, 100);
+                });
+
+                //set resizable
+                /*
+                $(".output").resizable({
+                    ghost: true,
+                    stop: function (event, ui) {
+                        resize($(this));
+                    }
+                });
+
+                 */
+            }
             //returns div for newly created terminal element
             function createTermElement(instanceId, hostId, displayLabel) {
                 var instance =
@@ -520,7 +602,7 @@
             [# th:each = "s : ${systemList}" ]
             //"#termwrapper") =
             $(createTermElement([[${s.instanceId}]], [[${s.id}]], [[${s.displayLabel}]])).replaceAll(".termwrapper");
-            setTerminalEvents($("#run_cmd_" + [[${s.instanceId}]]));
+            setTerminalEvents($("#run_cmd_" + [[${s.instanceId}]]),[[${s.instanceId}]]);
             [/]
 
             var y_offset = $('.run_cmd:first').innerHeight() - $('.run_cmd').find(".output:first").innerHeight();

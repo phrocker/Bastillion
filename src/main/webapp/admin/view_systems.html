@@ -138,7 +138,6 @@
                         <td th:text="${s.user}"></td>
                         <td th:text="${s.host} +':' + ${s.port}"></td>
                         <td><a  target="_blank" th:href="'/admin/selectSystemsForCompositeTerms.ktrl?systemSelectId=' + ${s.id} + '&amp;_csrf=' + ${session._csrf}">
-
                             <button th:id="'role_btn_' + ${s.id}"
                                     class="btn btn-secondary edit_btn spacer spacer-left">Open Terminal
 
