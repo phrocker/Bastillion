@@ -241,7 +241,7 @@ public class ProxyKtrl extends BaseKontroller {
                         try {
                             aURL = new URL(linkStr);
                         } catch (MalformedURLException e) {
-                            throw new RuntimeException(e);
+                            log.error("Error on 358", e);
                         }
 
                         if (null != aURL && knownHosts.contains(aURL.getHost())) {
@@ -301,7 +301,7 @@ public class ProxyKtrl extends BaseKontroller {
                             try {
                                 aURL = new URL(srcStr);
                             } catch (MalformedURLException ex) {
-                                e.printStackTrace();
+                                log.error("Error on 358", ex);
                             }
 
                             //throw new RuntimeException(e);
@@ -355,7 +355,7 @@ public class ProxyKtrl extends BaseKontroller {
                                 try {
                                     aURL = new URL(srcStr);
                                 } catch (MalformedURLException ex) {
-                                    ex.printStackTrace();
+                                    log.error("Error on 358", ex);
                                 }
 
                             }
