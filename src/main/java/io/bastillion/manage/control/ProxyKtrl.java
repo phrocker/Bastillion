@@ -126,10 +126,9 @@ public class ProxyKtrl extends BaseKontroller {
                 return assignSystems();
             }
         }
+        return "/manage/view_proxies.html";
     }
 
-    private void createTables() {
-    }
 
     @Kontrol(path = "/admin/proxy/select", method = MethodType.GET)
     public String selectSystem() throws ServletException, GeneralSecurityException, SQLException {
