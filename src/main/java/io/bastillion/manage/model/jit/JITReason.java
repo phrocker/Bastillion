@@ -1,4 +1,4 @@
-package io.bastillion.manage.jit;
+package io.bastillion.manage.model.jit;
 
 
 import lombok.AllArgsConstructor;

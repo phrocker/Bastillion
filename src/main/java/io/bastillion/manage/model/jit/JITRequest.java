@@ -1,8 +1,7 @@
-package io.bastillion.manage.jit;
+package io.bastillion.manage.model.jit;
 
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

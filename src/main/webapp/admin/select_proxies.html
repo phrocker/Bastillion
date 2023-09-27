@@ -1,0 +1,123 @@
+<!--/**
+ *    Copyright (C) 2013 Loophole, LLC
+ *
+ *    Licensed under The Prosperity Public License 3.0.0
+ */-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta th:replace="_res/inc/header">
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            $("#view_btn").button().click(function () {
+                $("#viewProxies").submit();
+            });
+
+            //call delete action
+            $(".open_btn").button().click(function () {
+                var idStr = $(this).attr('id').replace("open_btn_", "");
+                var id = idStr.split('_')[0]
+                var sysId = idStr.split('_')[1]
+
+                window.location = '/admin/proxy/http.ktrl?systemSelectId=' + sysId + '&proxyId=' + id
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
+            //submit add or edit form
+            $(".submit_btn").button().click(function () {
+                $(this).parents('.modal').find('form').submit();
+            });
+
+            $(".sort,.sortAsc,.sortDesc").click(function () {
+                var id = $(this).attr('id');
+
+                var orderDirection = $('#viewProxies_sortedSet_orderByDirection');
+                if (orderDirection.attr('value') === 'asc') {
+                    orderDirection.attr('value', 'desc');
+                } else {
+                    orderDirection.attr('value', 'asc');
+                }
+
+                $('#viewProxies_sortedSet_orderByField').attr('value', id);
+                $("#viewProxies").submit();
+
+            });
+
+            [# th:if= "${!#strings.isEmpty(sortedSet.orderByField)}"]
+                $('#' + [[${sortedSet.orderByField}]]).attr('class', [[${sortedSet.orderByDirection}]]);
+            [/]
+
+        });
+        /*]]>*/
+
+    </script>
+    <script th:inline="javascript" th:if="${!#maps.isEmpty(fieldErrors) || !errors.empty}">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            [# th:if= "${proxy.proxyId > 0}"]
+                new bootstrap.Modal($('#edit_dialog_' + [[${proxy.proxyId}]]).show();
+            [/]
+
+            [# th:if= "${proxy.proxyId <= 0}"]
+                new bootstrap.Modal($("#add_dialog")).show();
+            [/]
+        });
+        /*]]>*/
+
+    </script>
+
+    <title>[[${systemOptions.systemLogoName}]] - Select Proxy</title>
+</head>
+
+<body>
+<div th:replace="_res/inc/navigation"></div>
+<div class="container">
+    <form id="viewProxies" th:action="@{/manage/viewProxies.ktrl}" method="get">
+        <input type="hidden" name="_csrf" th:value="${session._csrf}">
+        <input type="hidden" id="viewProxies_sortedSet_orderByDirection" name="sortedSet.orderByDirection"
+               th:value="${sortedSet.orderByDirection}">
+        <input type="hidden" id="viewProxies_sortedSet_orderByField" name="sortedSet.orderByField"
+               th:value="${sortedSet.orderByField}">
+        <h3>Select Proxies</h3>
+    </form>
+    <div class="scrollWrapper" th:if="${sortedSet.itemList != null && !sortedSet.itemList.empty}">
+        <table class="table-striped scrollableTable">
+            <thead>
+            <tr>
+                <th th:id="${@io.bastillion.manage.db.ProxyDB@SORT_BY_NAME}" class="sort">Proxy Host name</th>
+                <th th:id="${@io.bastillion.manage.db.ProxyDB@SORT_BY_PORT}"
+                    class="sort">Proxy Port
+                </th>
+                <th>
+                    Operations
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <template th:each="s : ${sortedSet.itemList}" th:remove="tag">
+                <tr>
+                    <td>
+                        <div th:id="'status_' + ${s.proxyId}" th:text="${s.host}"></div>
+                    </td>
+                    <td th:text="${s.port}"></td>
+                    <td>
+                        <div>
+                            <button th:id="'open_btn_' + ${s.proxyId} + '_' + ${s.hostSystem.id}"
+                                    class="btn btn-secondary open_btn spacer spacer-right">Open Proxy
+                            </button>
+                            </a>
+                            <div style="clear:both"></div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+
+</html>

@@ -1,12 +1,11 @@
 package io.bastillion.manage.util;
 
 import io.bastillion.common.util.AppConfig;
-import io.bastillion.common.util.AuthUtil;
 import io.bastillion.manage.db.JITProcessingDB;
-import io.bastillion.manage.jit.JITReason;
-import io.bastillion.manage.jit.JITRequest;
-import io.bastillion.manage.jit.JITRequestLink;
-import io.bastillion.manage.jit.JITStatus;
+import io.bastillion.manage.model.jit.JITReason;
+import io.bastillion.manage.model.jit.JITRequest;
+import io.bastillion.manage.model.jit.JITRequestLink;
+import io.bastillion.manage.model.jit.JITStatus;
 import io.bastillion.manage.model.SchSession;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;

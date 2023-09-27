@@ -5,18 +5,14 @@
  */
 package io.bastillion.manage.db;
 
-import io.bastillion.manage.jit.JITReason;
-import io.bastillion.manage.jit.JITRequest;
-import io.bastillion.manage.jit.JITRequestLink;
-import io.bastillion.manage.jit.JITStatus;
-import io.bastillion.manage.jit.JITTracker;
-import io.bastillion.manage.model.HostSystem;
-import io.bastillion.manage.model.Rule;
+import io.bastillion.manage.model.jit.JITReason;
+import io.bastillion.manage.model.jit.JITRequest;
+import io.bastillion.manage.model.jit.JITRequestLink;
+import io.bastillion.manage.model.jit.JITStatus;
+import io.bastillion.manage.model.jit.JITTracker;
 import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.util.DBUtils;
 import io.bastillion.manage.util.JITUtils;
-import org.apache.commons.collections4.map.LRUMap;
-import org.apache.commons.lang3.StringUtils;
 
 import java.security.GeneralSecurityException;
 import java.sql.Connection;

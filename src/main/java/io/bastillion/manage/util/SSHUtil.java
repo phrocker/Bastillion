@@ -6,6 +6,7 @@
 package io.bastillion.manage.util;
 
 import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelDirectTCPIP;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
@@ -34,10 +35,20 @@ import io.bastillion.manage.task.SecureShellTask;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.client.HttpClient;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rawhttp.core.EagerHttpRequest;
+import rawhttp.core.EagerHttpResponse;
+import rawhttp.core.RawHttp;
+import rawhttp.core.RawHttpRequest;
+import rawhttp.core.RawHttpResponse;
+import rawhttp.core.body.BodyReader;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -51,6 +62,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -549,6 +561,103 @@ public class SSHUtil {
 
 
         return hostSystem;
+    }
+
+    public static String tunnelURL(String passphrase, String password, Long userId, Long sessionId,
+                                       HostSystem hostSystem, Map<Long, UserSchSessions> userSessionMap,
+                                       String hostname, Integer port, String path) throws SQLException, GeneralSecurityException {
+
+        JSch jsch = new JSch();
+
+        StringBuilder response = new StringBuilder();
+
+        try {
+            ApplicationKey appKey = PrivateKeyDB.getApplicationKey();
+            //check to see if passphrase has been provided
+            if (passphrase == null || passphrase.trim().equals("")) {
+                passphrase = appKey.getPassphrase();
+                //check for null inorder to use key without passphrase
+                if (passphrase == null) {
+                    passphrase = "";
+                }
+            }
+            //add private key
+            jsch.addIdentity(appKey.getId().toString(), appKey.getPrivateKey().trim().getBytes(), appKey.getPublicKey().getBytes(), passphrase.getBytes());
+
+            //create session
+            Session session = jsch.getSession(hostSystem.getUser(), hostSystem.getHost(), hostSystem.getPort());
+
+            //set password if it exists
+            if (password != null && !password.trim().equals("")) {
+                session.setPassword(password);
+            }
+            //  session.setConfig("StrictHostKeyChecking", "no");
+            jsch.setKnownHosts(System.getProperty("user.home")+"/.ssh/known_hosts");
+            session.setConfig("PreferredAuthentications", "publickey,keyboard-interactive,password");
+            session.setServerAliveInterval(SERVER_ALIVE_INTERVAL);
+            session.connect(SESSION_TIMEOUT);
+
+            Channel channel=session.openChannel("direct-tcpip");
+            ((ChannelDirectTCPIP)channel).setHost(hostname);
+            ((ChannelDirectTCPIP)channel).setPort(port);
+
+
+            InputStream in = channel.getInputStream();
+            OutputStream out = channel.getOutputStream();
+//            channel.setInputStream(System.in);
+  //          channel.setOutputStream(System.out);
+            channel.connect(1000);
+
+            RawHttp http = new RawHttp();
+            RawHttpRequest request = http.parseRequest(
+                    "GET " + path + " HTTP/1.1\r\n" +
+                    "User-Agent: curl/7.16.3 libcurl/7.16.3 OpenSSL/0.9.7l zlib/1.2.3\r\n" +
+                    "Host: " + hostname + ":" + port + "\r\n" +
+                    "Accept-Language: en");
+
+            request.writeTo(out);
+
+            out.flush();;
+
+            RawHttpResponse resp = http.parseResponse(in);
+
+            EagerHttpResponse eagerResponse = resp.eagerly();
+
+
+
+            eagerResponse.getBody().map(response::append)
+                    .orElseThrow(() -> new RuntimeException("No body"));
+
+            /*Document document = Jsoup.parse(response.toString());
+
+            response = new StringBuilder();
+            response.append ( document.body().toString() );
+            */
+
+            out.close();
+            in.close();
+            channel.disconnect();
+            session.disconnect();
+
+
+        } catch (JSchException | IOException | GeneralSecurityException ex) {
+            ex.printStackTrace();
+            log.info(ex.toString(), ex);
+            hostSystem.setErrorMsg(ex.getMessage());
+            if (ex.getMessage().toLowerCase().contains("userauth fail")) {
+                hostSystem.setStatusCd(HostSystem.PUBLIC_KEY_FAIL_STATUS);
+            } else if (ex.getMessage().toLowerCase().contains("auth fail") || ex.getMessage().toLowerCase().contains("auth cancel")) {
+                hostSystem.setStatusCd(HostSystem.AUTH_FAIL_STATUS);
+            } else if (ex.getMessage().toLowerCase().contains("unknownhostexception")) {
+                hostSystem.setErrorMsg("DNS Lookup Failed");
+                hostSystem.setStatusCd(HostSystem.HOST_FAIL_STATUS);
+            } else {
+                hostSystem.setStatusCd(HostSystem.GENERIC_FAIL_STATUS);
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        return response.toString();
     }
 
 

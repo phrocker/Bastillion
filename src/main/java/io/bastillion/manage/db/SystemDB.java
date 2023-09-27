@@ -5,6 +5,7 @@
  */
 package io.bastillion.manage.db;
 
+import io.bastillion.common.util.ConcurrentLRUCache;
 import io.bastillion.manage.model.HostSystem;
 import io.bastillion.manage.model.HostSystemRule;
 import io.bastillion.manage.model.Profile;
@@ -46,7 +47,7 @@ public class SystemDB {
     public static final String SORT_BY_STATUS = STATUS_CD;
 
 
-    private static final Map<Long, HostSystem> systemMap = Collections.synchronizedMap(new LRUMap<>());
+    private static final ConcurrentLRUCache<Long, HostSystem> systemMap = new ConcurrentLRUCache(100);
 
     private SystemDB() {
     }

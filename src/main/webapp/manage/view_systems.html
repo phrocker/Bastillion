@@ -29,6 +29,11 @@
                     + '&sortedSet.orderByField=' + /*[[${sortedSet.orderByField}]]*/ ''
                     + '&_csrf=' + [[${session._csrf}]];
             });
+            $(".prox_btn").button().click(function () {
+                var id = $(this).attr('id').replace("prox_btn_", "");
+                window.location = '/manage/proxy/assign.ktrl?systemSelectId=' + id
+                    + '&_csrf=' + [[${session._csrf}]];
+            });
             //submit add or edit form
             $(".submit_btn").button().click(function () {
                 $(this).parents('.modal').find('form').submit();
@@ -164,6 +169,9 @@
                             </button>
                             <button th:id="'del_btn_' + ${s.id}"
                                     class="btn btn-secondary del_btn spacer spacer-right">Delete
+                            </button>
+                            <button th:id="'prox_btn_' + ${s.id}"
+                                    class="btn btn-secondary prox_btn spacer spacer-right">Proxies
                             </button>
                             <div style="clear:both"></div>
                         </div>

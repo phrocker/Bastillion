@@ -5,6 +5,7 @@
  */
 package io.bastillion.manage.db;
 
+import io.bastillion.common.util.ConcurrentLRUCache;
 import io.bastillion.manage.model.Auth;
 import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.model.User;
@@ -46,7 +47,7 @@ public class UserDB {
     public static final String LAST_LOGIN_TM = "last_login_tm";
     public static final String EXPIRATION_TM = "expiration_tm";
 
-    private static final Map<Long, User> userMap = Collections.synchronizedMap(new LRUMap<>());
+    private static final ConcurrentLRUCache<Long, User> userMap = new ConcurrentLRUCache(100);
 
     private UserDB() {
     }

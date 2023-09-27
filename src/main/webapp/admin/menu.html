@@ -94,7 +94,7 @@
                 </a>
             </template>
             <template
-                    th:if="${@io.bastillion.manage.util.SessionOutputUtil@enableInternalAudit == false ||  #strings.equals(session.userType,'A')}"
+                    th:if="${#strings.equals(session.userType,'M')}"
                     th:remove="tag">
                 <a th:href="'../manage/viewRules.ktrl?_csrf=' + ${session._csrf}"
                    class="list-group-item list-group-item-action list-group-item-light">
@@ -105,7 +105,7 @@
                 </a>
             </template>
             <template
-                    th:if="${@io.bastillion.manage.util.SessionOutputUtil@enableInternalAudit == false ||  #strings.equals(session.userType,'A')}"
+                    th:if="${#strings.equals(session.userType,'M')}"
                     th:remove="tag">
                 <a th:href="'../manage/viewOpenJIT.ktrl?_csrf=' + ${session._csrf}"
                    class="list-group-item list-group-item-action list-group-item-light">

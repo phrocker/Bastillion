@@ -128,6 +128,10 @@ public class DBInitServlet extends javax.servlet.http.HttpServlet {
                 //log_tm timestamp default CURRENT_TIMESTAMP, approved boolean not null default false
                 statement.executeUpdate("create table if not exists jit_approvals (id BIGINT PRIMARY KEY AUTO_INCREMENT, approver_id BIGINT, jit_request_id BIGINT, approved boolean not null default false, last_updated timestamp default CURRENT_TIMESTAMP,  foreign key (approver_id) references users(id), foreign key (jit_request_id) references jit_requests(id))");
 
+                // proxy
+                statement.executeUpdate("create table if not exists host_proxies (id BIGINT PRIMARY KEY AUTO_INCREMENT, system_id BIGINT, base_url varchar not null, port INTEGER, last_updated timestamp default CURRENT_TIMESTAMP, foreign key (system_id) references system(id))");
+
+                statement.executeUpdate("create table if not exists host_proxy_assignments (id BIGINT PRIMARY KEY AUTO_INCREMENT, proxy_id BIGINT, user_id BIGINT,  foreign key (user_id) references users(id), foreign key (proxy_id) references host_proxies(id))");
 
                 //if exists readfile to set default password
                 String salt = EncryptionUtil.generateSalt();

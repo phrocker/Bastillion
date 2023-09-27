@@ -8,12 +8,9 @@ package io.bastillion.manage.control;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
 import io.bastillion.common.util.BastillionOptions;
-import io.bastillion.manage.db.AuditingRulesDB;
 import io.bastillion.manage.db.JITProcessingDB;
-import io.bastillion.manage.db.SystemDB;
-import io.bastillion.manage.jit.JITRequest;
-import io.bastillion.manage.jit.JITTracker;
-import io.bastillion.manage.model.Rule;
+import io.bastillion.manage.model.jit.JITRequest;
+import io.bastillion.manage.model.jit.JITTracker;
 import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.util.JITUtils;
 import loophole.mvc.annotation.Kontrol;
@@ -28,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

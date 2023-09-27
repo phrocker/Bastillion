@@ -66,6 +66,14 @@
                         </li>
                     </ul>
                 </li>
+                <li class="dropdown nav-item"><a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">Secure
+                    Browser <b class="caret"></b></a>
+                    <ul
+                            class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="'/admin/proxy/select.ktrl?_csrf=' + ${session._csrf}">Browser</a>
+                        </li>
+                    </ul>
+                </li>
                 <li th:if="${@io.bastillion.manage.util.SessionOutputUtil@enableInternalAudit &&  #strings.equals(session.userType,'M')}"
                     class="nav-item"><a th:href="'../manage/viewSessions.ktrl?_csrf=' + ${session._csrf}"
                                         class="nav-link">Audit Sessions</a>
