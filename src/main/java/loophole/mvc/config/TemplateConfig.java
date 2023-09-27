@@ -21,24 +21,35 @@ import javax.servlet.annotation.WebListener;
 public class TemplateConfig implements ServletContextListener {
 
 	private static final String TEMPLATE_ENGINE = "com.thymeleafexamples.thymeleaf3.TemplateEngineInstance";
+	private static final String TEMPLATE_ENGINEF = "com.thymeleafexamples.thymeleaf3.TemplateEngineInstanceFile";
 	
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
 		TemplateEngine engine = templateEngine(sce.getServletContext());
 		sce.getServletContext().setAttribute(TEMPLATE_ENGINE, engine);
+		engine = templateEngine(sce.getServletContext(), true);
+		sce.getServletContext().setAttribute(TEMPLATE_ENGINEF, engine);
 	}
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
 	}
 
-	private TemplateEngine templateEngine(ServletContext servletContext) {
+	public TemplateEngine templateEngine(ServletContext servletContext) {
+		return templateEngine(servletContext,false);
+	}
+
+	public TemplateEngine templateEngine(ServletContext servletContext, boolean treatAsContent) {
 		TemplateEngine engine = new TemplateEngine();
-		engine.setTemplateResolver(templateResolver(servletContext));
+		if (treatAsContent) {
+			engine.setTemplateResolver(contentHandlingResolver(servletContext));
+		} else {
+			engine.setTemplateResolver(templateResolver(servletContext));
+		}
 		return engine;
 	}
 
-	private ITemplateResolver templateResolver(ServletContext servletContext) {
+	public ITemplateResolver templateResolver(ServletContext servletContext) {
 		JavaxServletWebApplication webApp = JavaxServletWebApplication.buildApplication(servletContext);
 		WebApplicationTemplateResolver resolver = new WebApplicationTemplateResolver(webApp);
 		resolver.setPrefix("/");
@@ -49,8 +60,25 @@ public class TemplateConfig implements ServletContextListener {
 		resolver.setCharacterEncoding("UTF-8");
 		return resolver;
 	}
+
+	public ITemplateResolver contentHandlingResolver(ServletContext servletContext) {
+		JavaxServletWebApplication webApp = JavaxServletWebApplication.buildApplication(servletContext);
+		FileOrWebAppResolver resolver = new FileOrWebAppResolver(webApp);
+		resolver.setPrefix("/");
+		resolver.setSuffix(TemplateServlet.VIEW_EXT);
+		resolver.setTemplateMode(TemplateMode.HTML);
+		resolver.setCacheable(true);
+		resolver.setCacheTTLMs(60000L);
+		resolver.setCharacterEncoding("UTF-8");
+		return resolver;
+	}
+
 	
 	public static TemplateEngine getTemplateEngine(ServletContext context) {
 		return (TemplateEngine) context.getAttribute(TEMPLATE_ENGINE);
+	}
+
+	public static TemplateEngine getTemplateEngineForFile(ServletContext context) {
+		return (TemplateEngine) context.getAttribute(TEMPLATE_ENGINEF);
 	}
 }

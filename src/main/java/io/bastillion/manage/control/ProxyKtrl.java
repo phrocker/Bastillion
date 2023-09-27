@@ -21,20 +21,38 @@ import loophole.mvc.annotation.Kontrol;
 import loophole.mvc.annotation.MethodType;
 import loophole.mvc.annotation.Model;
 import loophole.mvc.base.BaseKontroller;
+import loophole.mvc.base.TemplateServlet;
+import loophole.mvc.config.TemplateConfig;
 import loophole.mvc.filter.SecurityFilter;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.web.IWebExchange;
+import org.thymeleaf.web.servlet.JavaxServletWebApplication;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -84,7 +102,7 @@ public class ProxyKtrl extends BaseKontroller {
     }
 
     @Kontrol(path = "/admin/proxy/http", method = MethodType.GET)
-    public String getHttpResponse() throws ServletException, GeneralSecurityException, SQLException {
+    public ServletResponse getHttpResponse() throws ServletException, GeneralSecurityException, SQLException, IOException {
         if (systemSelectId != null && proxyId != null) {
             Long userId = AuthUtil.getUserId(getRequest());
             Long sessionId = AuthUtil.getSessionId(getRequest());
@@ -93,7 +111,28 @@ public class ProxyKtrl extends BaseKontroller {
         } else {
             httpResponse = "Could not load ";
         }
-        return "/admin/secure_browser.html";
+        ;
+        //String content = IOUtils.toString(getClass().getClassLoader().getSystemResourceAsStream("secure_browser.html"), StandardCharsets.UTF_8);
+        String fileName = getClass().getClassLoader().getResource(".").getPath() + "secure_browser.html";
+        String content = new String(Files.readAllBytes(Paths.get(fileName)));
+
+        content = content.replace("(HTML)",StringEscapeUtils.escapeHtml(httpResponse));
+
+        TemplateEngine engine = TemplateConfig.getTemplateEngineForFile(getRequest().getServletContext());
+        JavaxServletWebApplication application =
+                JavaxServletWebApplication.buildApplication(getRequest().getServletContext());
+
+        final IWebExchange webExchange = application.buildExchange(getRequest(),getResponse());
+        WebContext context = new WebContext(webExchange);
+        context.setVariable("systemOptions",systemOptions);
+        //String uri = getRequest().getRequestURI().replaceAll("\\" + TemplateServlet.VIEW_EXT + ".*", TemplateServlet.VIEW_EXT)
+                //.replaceAll("^" + getRequest().getContextPath(), "");
+        String uri = getRequest().getRequestURI();
+        StringWriter writer = new StringWriter();
+        engine.process(content, context, writer);
+
+
+        return ServletResponse.builder().type(ServletResponseType.RAW).contentType("text/html").utfHttpResponse(writer.toString()).build();
     }
 
     @Kontrol(path = "/admin/proxy/get", method = MethodType.GET)
@@ -203,6 +242,8 @@ public class ProxyKtrl extends BaseKontroller {
                 ProxyHost host = ProxyDB.getProxyHost(proxyId);
                 String path = "/";
 
+                System.out.println("Url is " + url);
+
                 if (url != null && !url.isEmpty()){
                     for(ProxyHost dbHost : proxies){
                         URL aURL = null;
@@ -274,10 +315,17 @@ public class ProxyKtrl extends BaseKontroller {
                 if (baseUrl.isEmpty()){
                     baseUrl = "http://" + host.getHost() + ":" + host.getPort();
                 }
+                else{
+                    if (baseUrl.endsWith("/")){
+                        baseUrl = baseUrl.substring(0,baseUrl.length()-1);
+                    }
+                }
 
                 for (Element link : links) {
                     if (link.attr("src") != null) {
                         String srcStr = link.attr("src").toLowerCase();
+                        if (srcStr.isEmpty())
+                            continue;
                         System.out.println("src str is " + srcStr);
                         URL aURL = null;
 

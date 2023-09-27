@@ -38,6 +38,7 @@ public class TemplateServlet extends HttpServlet {
 
         final IWebExchange webExchange = application.buildExchange(request, response);
         WebContext context = new WebContext(webExchange);
+
         String uri = request.getRequestURI().replaceAll("\\" + TemplateServlet.VIEW_EXT + ".*", TemplateServlet.VIEW_EXT)
                 .replaceAll("^" + request.getContextPath(), "");
         engine.process(uri, context, response.getWriter());
