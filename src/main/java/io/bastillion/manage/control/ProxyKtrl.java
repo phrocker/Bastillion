@@ -121,6 +121,7 @@ public class ProxyKtrl extends BaseKontroller {
             }
             return "/manage/view_proxies.html";
         }catch(Exception e){
+            log.error("Exception on assignment", e);
             if (e.getMessage().contains("jdbc") || e.getMessage().contains("Jdbc")){
                 DBInitServlet.createTables();
                 return assignSystems();
