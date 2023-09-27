@@ -237,6 +237,10 @@ public class ProxyKtrl extends BaseKontroller {
                 for (Element link : links) {
                     if (link.attr("href") != null) {
                         String linkStr = link.attr("href").toLowerCase();
+
+                        if (linkStr.equals("#"))
+                            continue;
+
                         URL aURL = null;
                         try {
                             aURL = new URL(linkStr);
