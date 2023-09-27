@@ -123,6 +123,7 @@ public class ProxyKtrl extends BaseKontroller {
         }catch(Exception e){
             if (e.getMessage().contains("jdbc") || e.getMessage().contains("Jdbc")){
                 DBInitServlet.createTables();
+                return assignSystems();
             }
         }
     }
