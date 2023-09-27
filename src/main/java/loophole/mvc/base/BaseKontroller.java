@@ -5,6 +5,8 @@
  */
 package loophole.mvc.base;
 
+import io.bastillion.manage.model.ServletResponse;
+import io.bastillion.manage.model.ServletResponseType;
 import loophole.mvc.annotation.Kontrol;
 import loophole.mvc.annotation.MethodType;
 import loophole.mvc.annotation.Model;
@@ -109,8 +111,9 @@ public class BaseKontroller {
      *
      * @return page to forward / redirect
      */
-    public String execute() throws ServletException {
-        String forward = null;
+    public ServletResponse execute() throws ServletException {
+       // String forward = null;
+        ServletResponse servletResponse = ServletResponse.builder().build();
 
         for (Class<?> clazz : ktrlList) {
 
@@ -149,7 +152,7 @@ public class BaseKontroller {
                                 if (validateMethod.isAnnotationPresent(Validate.class)) {
                                     Validate v = validateMethod.getAnnotation(Validate.class);
                                     if (validateMethod.getName().equalsIgnoreCase("validate" + method.getName())) {
-                                        forward = v.input();
+                                        servletResponse = ServletResponse.builder().utfHttpResponse(v.input()).type(ServletResponseType.UNKNOWN).build();
                                         Method m = clazz.getDeclaredMethod(validateMethod.getName());
                                         m.invoke(ctrl);
                                     }
@@ -159,7 +162,11 @@ public class BaseKontroller {
                             //invoke execute method
                             if (!ctrl.hasErrors()) {
                                 Method m = clazz.getDeclaredMethod(method.getName());
-                                forward = (String) m.invoke(ctrl);
+                                if (m.getReturnType().isAssignableFrom(ServletResponse.class)) {
+                                    servletResponse = (ServletResponse) m.invoke(ctrl);
+                                } else {
+                                    servletResponse = ServletResponse.builder().utfHttpResponse((String) m.invoke(ctrl)).type(ServletResponseType.UNKNOWN).build();
+                                }
                             }
 
                             // set set attributes from controller to forward to view
@@ -194,7 +201,7 @@ public class BaseKontroller {
             }
 
         }
-        return forward;
+        return servletResponse;
 
     }
 

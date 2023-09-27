@@ -5,6 +5,8 @@
  */
 package loophole.mvc.base;
 
+import io.bastillion.manage.model.ServletResponseType;
+import io.bastillion.manage.model.ServletResponse;
 import loophole.mvc.filter.SecurityFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +51,47 @@ public class DispatcherServlet extends HttpServlet {
     private void execute(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         loophole.mvc.base.BaseKontroller bc = new BaseKontroller(request, response);
 
-        String forward = bc.execute();
+        ServletResponse resp = bc.execute();
+        String forward = resp.getUtfHttpResponse();
+        if (resp != null) {
+            switch (resp.getType()) {
+                case REDIRECT:
+                    forward = forward.contains("?") ? forward + "&" : forward + "?";
+                    forward = forward + SecurityFilter._CSRF + "=" + request.getSession().getAttribute(SecurityFilter._CSRF);
+                    forward = request.getContextPath() + forward.replaceAll("redirect:", "");
+                    log.debug("redirect : " + forward);
+                    response.sendRedirect(forward);
+                    break;
+                case FORWARD:
+                    forward = forward.replaceAll("forward:", "");
+                    log.debug("forward: " + forward);
+                    request.getRequestDispatcher(forward)
+                            .forward(request, response);
+                    break;
+                case UNKNOWN:
+                    if (null != forward) {
+                        if (forward.contains("redirect:")) {
+                            //add csrf to redirect
+                            forward = forward.contains("?") ? forward + "&" : forward + "?";
+                            forward = forward + SecurityFilter._CSRF + "=" + request.getSession().getAttribute(SecurityFilter._CSRF);
+                            forward = request.getContextPath() + forward.replaceAll("redirect:", "");
+                            log.debug("redirect : " + forward);
+                            response.sendRedirect(forward);
+                        } else {
+                            forward = forward.replaceAll("forward:", "");
+                            log.debug("forward: " + forward);
+                            request.getRequestDispatcher(forward)
+                                    .forward(request, response);
+                        }
+                    }
+                case RAW:
+                    response.setContentType(resp.getContentType());
+                    response.getWriter().write(forward);
+                    break;
 
-        if (forward != null) {
+            }
+        }
+            /*
             if (forward.contains("redirect:")) {
                 //add csrf to redirect
                 forward = forward.contains("?") ? forward + "&" : forward + "?";
@@ -69,7 +109,7 @@ public class DispatcherServlet extends HttpServlet {
                 request.getRequestDispatcher(forward)
                         .forward(request, response);
             }
-        }
+        }*/
 
     }
 }

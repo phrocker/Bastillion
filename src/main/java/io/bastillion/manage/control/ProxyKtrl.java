@@ -10,11 +10,11 @@ import io.bastillion.common.util.AuthUtil;
 import io.bastillion.common.util.BastillionOptions;
 import io.bastillion.manage.db.ProxyDB;
 import io.bastillion.manage.db.SystemDB;
-import io.bastillion.manage.db.SystemStatusDB;
-import io.bastillion.manage.model.HostSystem;
+import io.bastillion.manage.model.ServletResponseType;
 import io.bastillion.manage.model.SortedSet;
 import io.bastillion.manage.model.UserSchSessions;
 import io.bastillion.manage.model.proxy.ProxyHost;
+import io.bastillion.manage.model.ServletResponse;
 import io.bastillion.manage.util.SSHUtil;
 import loophole.mvc.annotation.Kontrol;
 import loophole.mvc.annotation.MethodType;
@@ -88,7 +88,7 @@ public class ProxyKtrl extends BaseKontroller {
             Long userId = AuthUtil.getUserId(getRequest());
             Long sessionId = AuthUtil.getSessionId(getRequest());
             System.out.println("if url is " + url );
-            createTerminals(userId,sessionId);
+            getHttpResponse(userId,sessionId);
         } else {
             httpResponse = "Could not load ";
         }
@@ -96,17 +96,18 @@ public class ProxyKtrl extends BaseKontroller {
     }
 
     @Kontrol(path = "/admin/proxy/get", method = MethodType.GET)
-    public String getRawResponse() throws ServletException, GeneralSecurityException, SQLException {
+    public ServletResponse getRawResponse() throws ServletException, GeneralSecurityException, SQLException {
+        ServletResponse response = null;
         if (systemSelectId != null && proxyId != null) {
             Long userId = AuthUtil.getUserId(getRequest());
             Long sessionId = AuthUtil.getSessionId(getRequest());
             System.out.println("if url is " + url );
-            createTerminals(userId,sessionId);
+            response = getHttpResponse(userId,sessionId,false);
         } else {
-            httpResponse = "Could not load ";
+            response = ServletResponse.builder().build();
         }
         System.out.println("ahh");
-        return "raw:" + httpResponse;
+        return response;
     }
 
     @Kontrol(path = "/manage/proxy/assign", method = MethodType.GET)
@@ -173,7 +174,12 @@ public class ProxyKtrl extends BaseKontroller {
         return "/manage/view_proxies.html";
     }
 
-    private void createTerminals(Long userId, Long sessionId) throws ServletException {
+    private ServletResponse getHttpResponse(Long userId, Long sessionId) throws ServletException {
+        return getHttpResponse(userId,sessionId,true);
+    }
+
+    private ServletResponse getHttpResponse(Long userId, Long sessionId, boolean parse) throws ServletException {
+        ServletResponse proxyResponse = ServletResponse.builder().build();
         try {
 
                 List<ProxyHost> proxies = ProxyDB.getProxies(systemSelectId);
@@ -210,8 +216,10 @@ public class ProxyKtrl extends BaseKontroller {
                 //if initial status run script
 
                     //set current session
-                httpResponse = SSHUtil.tunnelURL(passphrase, password, userId, sessionId, host.getHostSystem(), userSchSessionMap, host.getHost(),host.getPort(), path);
+                proxyResponse = SSHUtil.tunnelURL(passphrase, password, userId, sessionId, host.getHostSystem(), userSchSessionMap, host.getHost(),host.getPort(), path);
+                httpResponse = proxyResponse.getUtfHttpResponse();
                 //System.out.println("httprsp is " + httpResponse);
+            if(parse) {
                 Document doc = Jsoup.parse(httpResponse);
 
                 Elements links = doc.select("a");
@@ -231,8 +239,7 @@ public class ProxyKtrl extends BaseKontroller {
                             String url = link.attr("href");
                             link.attr("href", "/admin/proxy/http.ktrl?systemSelectId=" + systemSelectId + "&proxyId=" + proxyId + "&_csrf=" + getRequest().getParameter(SecurityFilter._CSRF) + "&url=" + url);
 
-                        }
-                        else{
+                        } else {
                             System.out.println(host.getHost() + " did not match " + link.attr("href"));
                             link.removeAttr("href");
                         }
@@ -244,97 +251,122 @@ public class ProxyKtrl extends BaseKontroller {
 
                 }
 
-            links = doc.select("script");
+                links = doc.select("script");
 
-            for (Element link : links) {
-                if (link.attr("src") != null) {
-                    String srcStr = link.attr("src").toLowerCase();
-                    System.out.println("src str is " + srcStr);
-                    URL aURL = null;
-                    if (srcStr.startsWith("./"))
-                    {
+                String baseUrl = FilenameUtils.getPath(url);
 
-                        String baseUrl = FilenameUtils.getPath(url);
+                if (baseUrl.isEmpty()){
+                    baseUrl = "http://" + host.getHost() + ":" + host.getPort();
+                }
+
+                for (Element link : links) {
+                    if (link.attr("src") != null) {
+                        String srcStr = link.attr("src").toLowerCase();
+                        System.out.println("src str is " + srcStr);
+                        URL aURL = null;
+
+                        if (srcStr.startsWith("./")) {
+
+
+                            String myFile = FilenameUtils.getBaseName(srcStr)
+                                    + "." + FilenameUtils.getExtension(srcStr);
+
+                            System.out.println(baseUrl);
+                            System.out.println(myFile);
+                            srcStr = baseUrl + "/" + myFile;
+                            //srcStr = host.getHost() + ":" + host.getPort() + "/" + srcStr.
+                            System.out.println("src is now " + srcStr);
+                        }
+                        try {
+
+                            aURL = new URL(srcStr);
+
+
+                        } catch (MalformedURLException e) {
+                            if (e.getMessage().contains("no protocol")){
+                                String myFile = FilenameUtils.getBaseName(srcStr)
+                                        + "." + FilenameUtils.getExtension(srcStr);
+                                srcStr = baseUrl + "/" + myFile;
+                            }
+                            try {
+                                aURL = new URL(srcStr);
+                            } catch (MalformedURLException ex) {
+                                e.printStackTrace();
+                            }
+
+                            //throw new RuntimeException(e);
+                        }
+
+                        if (null != aURL && knownHosts.contains(aURL.getHost())) {
+
+                            System.out.println("Setting path");
+                            link.attr("src", "/admin/proxy/get.ktrl?systemSelectId=" + systemSelectId + "&proxyId=" + proxyId + "&_csrf=" + getRequest().getParameter(SecurityFilter._CSRF) + "&url=" + srcStr);
+
+                        } else {
+                            System.out.println(host.getHost() + " did not match " + link.attr("src"));
+                            link.removeAttr("src");
+                        }
+                    }
+
+                }
+
+                links = doc.select("link");
+
+                for (Element link : links) {
+                    if (link.attr("href") != null) {
+                        String srcStr = link.attr("href").toLowerCase();
+                        System.out.println("src str is " + srcStr);
+                        URL aURL = null;
                         String myFile = FilenameUtils.getBaseName(srcStr)
                                 + "." + FilenameUtils.getExtension(srcStr);
 
-                        System.out.println(baseUrl);
-                        System.out.println(myFile);
-                        srcStr = baseUrl + "/" + myFile;
-                        //srcStr = host.getHost() + ":" + host.getPort() + "/" + srcStr.
-                        System.out.println("src is now " + srcStr);
+                        if (srcStr.startsWith("./") ||
+                                myFile.equals(srcStr)) {
+
+
+
+
+                            System.out.println(baseUrl);
+                            System.out.println(myFile);
+                            srcStr = baseUrl + "/" + myFile;
+                            //srcStr = host.getHost() + ":" + host.getPort() + "/" + srcStr.
+                            System.out.println("src is now " + srcStr);
+                        }
+                        try {
+
+                            aURL = new URL(srcStr);
+
+
+                        } catch (MalformedURLException e) {
+                            if (e.getMessage().contains("no protocol")){
+                                System.out.println("adjusting from " + url);
+                                srcStr = baseUrl + "/" + myFile;
+
+                                try {
+                                    aURL = new URL(srcStr);
+                                } catch (MalformedURLException ex) {
+                                    ex.printStackTrace();
+                                }
+
+                            }
+                            //throw new RuntimeException(e);
+                        }
+
+                        if (null != aURL && knownHosts.contains(aURL.getHost())) {
+
+                            System.out.println("Setting path");
+                            link.attr("href", "/admin/proxy/get.ktrl?systemSelectId=" + systemSelectId + "&proxyId=" + proxyId + "&_csrf=" + getRequest().getParameter(SecurityFilter._CSRF) + "&url=" + srcStr);
+
+                        } else {
+                            System.out.println(host.getHost() + " did not match " + link.attr("href"));
+                            link.removeAttr("href");
+                        }
                     }
-                    try {
 
-                        aURL = new URL(srcStr);
-
-
-                    } catch (MalformedURLException e) {
-e.printStackTrace();
-                        //throw new RuntimeException(e);
-                    }
-
-                    if (null != aURL && knownHosts.contains(aURL.getHost())) {
-
-                        System.out.println("Setting path");
-                        link.attr("src", "/admin/proxy/get.ktrl?systemSelectId=" + systemSelectId + "&proxyId=" + proxyId + "&_csrf=" + getRequest().getParameter(SecurityFilter._CSRF) + "&url=" + srcStr);
-
-                    }
-                    else{
-                        System.out.println(host.getHost() + " did not match " + link.attr("src"));
-                        link.removeAttr("src");
-                    }
                 }
-
-            }
-
-            links = doc.select("link");
-
-            for (Element link : links) {
-                if (link.attr("href") != null) {
-                    String srcStr = link.attr("href").toLowerCase();
-                    System.out.println("src str is " + srcStr);
-                    URL aURL = null;
-                    String myFile = FilenameUtils.getBaseName(srcStr)
-                            + "." + FilenameUtils.getExtension(srcStr);
-
-                    if (srcStr.startsWith("./") ||
-                            myFile.equals(srcStr))
-                    {
-
-                        String baseUrl = FilenameUtils.getPath(url);
-
-
-                        System.out.println(baseUrl);
-                        System.out.println(myFile);
-                        srcStr = baseUrl + "/" + myFile;
-                        //srcStr = host.getHost() + ":" + host.getPort() + "/" + srcStr.
-                        System.out.println("src is now " + srcStr);
-                    }
-                    try {
-
-                        aURL = new URL(srcStr);
-
-
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                        //throw new RuntimeException(e);
-                    }
-
-                    if (null != aURL && knownHosts.contains(aURL.getHost())) {
-
-                        System.out.println("Setting path");
-                        link.attr("href", "/admin/proxy/get.ktrl?systemSelectId=" + systemSelectId + "&proxyId=" + proxyId + "&_csrf=" + getRequest().getParameter(SecurityFilter._CSRF) + "&url=" + srcStr);
-
-                    }
-                    else{
-                        System.out.println(host.getHost() + " did not match " + link.attr("href"));
-                        link.removeAttr("href");
-                    }
-                }
-
-            }
                 httpResponse = doc.toString();
+
+            }
 
 
 
@@ -344,6 +376,9 @@ e.printStackTrace();
             log.error(ex.toString(), ex);
             throw new ServletException(ex.toString(), ex);
         }
+
+        return ServletResponse.builder()
+                .type(ServletResponseType.RAW).contentType(proxyResponse.getContentType()).utfHttpResponse(httpResponse).build();
     }
 
 }

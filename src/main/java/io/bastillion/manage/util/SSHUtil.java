@@ -31,24 +31,20 @@ import io.bastillion.manage.model.Rule;
 import io.bastillion.manage.model.SchSession;
 import io.bastillion.manage.model.SessionOutput;
 import io.bastillion.manage.model.UserSchSessions;
+import io.bastillion.manage.model.ServletResponse;
 import io.bastillion.manage.task.SecureShellTask;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.client.HttpClient;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rawhttp.core.EagerHttpRequest;
 import rawhttp.core.EagerHttpResponse;
 import rawhttp.core.RawHttp;
+import rawhttp.core.RawHttpHeaders;
 import rawhttp.core.RawHttpRequest;
 import rawhttp.core.RawHttpResponse;
-import rawhttp.core.body.BodyReader;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -62,7 +58,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -563,13 +558,15 @@ public class SSHUtil {
         return hostSystem;
     }
 
-    public static String tunnelURL(String passphrase, String password, Long userId, Long sessionId,
-                                       HostSystem hostSystem, Map<Long, UserSchSessions> userSessionMap,
-                                       String hostname, Integer port, String path) throws SQLException, GeneralSecurityException {
+    public static ServletResponse tunnelURL(String passphrase, String password, Long userId, Long sessionId,
+                                            HostSystem hostSystem, Map<Long, UserSchSessions> userSessionMap,
+                                            String hostname, Integer port, String path) throws SQLException, GeneralSecurityException {
 
         JSch jsch = new JSch();
 
         StringBuilder response = new StringBuilder();
+
+        ServletResponse.ServletResponseBuilder responseBuilder = ServletResponse.builder();
 
         try {
             ApplicationKey appKey = PrivateKeyDB.getApplicationKey();
@@ -623,7 +620,14 @@ public class SSHUtil {
 
             EagerHttpResponse eagerResponse = resp.eagerly();
 
-
+            RawHttpHeaders headers = eagerResponse.getHeaders();
+            for(String name : headers.getHeaderNames()){
+                if (name.equalsIgnoreCase("Content-Type")){
+                    System.out.println("Content Type *&*****");
+                    responseBuilder.contentType(headers.get(name).get(0));
+                    headers.get(name).forEach(System.out::println);
+                }
+            }
 
             eagerResponse.getBody().map(response::append)
                     .orElseThrow(() -> new RuntimeException("No body"));
@@ -657,7 +661,8 @@ public class SSHUtil {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-        return response.toString();
+        responseBuilder.utfHttpResponse(response.toString());
+        return responseBuilder.build();
     }
 
 
