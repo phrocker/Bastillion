@@ -5,6 +5,7 @@
  */
 package io.bastillion.manage.control;
 
+import io.bastillion.common.db.DBInitServlet;
 import io.bastillion.common.util.AppConfig;
 import io.bastillion.common.util.AuthUtil;
 import io.bastillion.common.util.BastillionOptions;
@@ -112,13 +113,21 @@ public class ProxyKtrl extends BaseKontroller {
 
     @Kontrol(path = "/manage/proxy/assign", method = MethodType.GET)
     public String assignSystems() throws ServletException, GeneralSecurityException, SQLException {
-        if (systemSelectId != null) {
-            ProxyDB.getProxies(systemSelectId,sortedSet);
-        } else {
-            httpResponse = "Could not load ";
+        try {
+            if (systemSelectId != null) {
+                ProxyDB.getProxies(systemSelectId, sortedSet);
+            } else {
+                httpResponse = "Could not load ";
+            }
+            return "/manage/view_proxies.html";
+        }catch(Exception e){
+            if (e.getMessage().contains("jdbc") || e.getMessage().contains("Jdbc")){
+                DBInitServlet.createTables();
+            }
         }
-        return "/manage/view_proxies.html";
+    }
 
+    private void createTables() {
     }
 
     @Kontrol(path = "/admin/proxy/select", method = MethodType.GET)

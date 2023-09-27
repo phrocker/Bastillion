@@ -209,4 +209,46 @@ public class DBInitServlet extends javax.servlet.http.HttpServlet {
         RefreshAuthKeyUtil.startRefreshAllSystemsTimerTask();
     }
 
+    public static void createTables() throws SQLException, GeneralSecurityException {
+        Connection connection = null;
+        Statement statement = null;
+        connection = DBUtils.getConn();
+        statement = connection.createStatement();
+
+        //create DB objects
+        statement.executeUpdate("create table if not exists users (id INTEGER PRIMARY KEY AUTO_INCREMENT, first_nm varchar, last_nm varchar, email varchar, username varchar not null unique, password varchar, auth_token varchar, auth_type varchar not null default '" + Auth.AUTH_BASIC + "', user_type varchar not null default '" + Auth.ADMINISTRATOR + "', salt varchar, otp_secret varchar, last_login_tm timestamp, expiration_tm timestamp)");
+        statement.executeUpdate("create table if not exists user_theme (user_id INTEGER PRIMARY KEY, bg varchar(7), fg varchar(7), d1 varchar(7), d2 varchar(7), d3 varchar(7), d4 varchar(7), d5 varchar(7), d6 varchar(7), d7 varchar(7), d8 varchar(7), b1 varchar(7), b2 varchar(7), b3 varchar(7), b4 varchar(7), b5 varchar(7), b6 varchar(7), b7 varchar(7), b8 varchar(7), foreign key (user_id) references users(id) on delete cascade) ");
+        statement.executeUpdate("create table if not exists system (id INTEGER PRIMARY KEY AUTO_INCREMENT, display_nm varchar not null, username varchar not null, host varchar not null, port INTEGER not null, authorized_keys varchar not null, status_cd varchar not null default 'INITIAL')");
+        statement.executeUpdate("create table if not exists profiles (id INTEGER PRIMARY KEY AUTO_INCREMENT, nm varchar not null, desc varchar not null)");
+        statement.executeUpdate("create table if not exists system_map (profile_id INTEGER, system_id INTEGER, foreign key (profile_id) references profiles(id) on delete cascade , foreign key (system_id) references system(id) on delete cascade, primary key (profile_id, system_id))");
+        statement.executeUpdate("create table if not exists user_map (user_id INTEGER, profile_id INTEGER, foreign key (user_id) references users(id) on delete cascade, foreign key (profile_id) references profiles(id) on delete cascade, primary key (user_id, profile_id))");
+        statement.executeUpdate("create table if not exists application_key (id INTEGER PRIMARY KEY AUTO_INCREMENT, public_key varchar not null, private_key varchar not null, passphrase varchar)");
+
+        statement.executeUpdate("create table if not exists status (id INTEGER, user_id INTEGER, status_cd varchar not null default 'INITIAL', foreign key (id) references system(id) on delete cascade, foreign key (user_id) references users(id) on delete cascade, primary key(id, user_id))");
+        statement.executeUpdate("create table if not exists scripts (id INTEGER PRIMARY KEY AUTO_INCREMENT, user_id INTEGER, display_nm varchar not null, script varchar not null, foreign key (user_id) references users(id) on delete cascade)");
+
+
+        statement.executeUpdate("create table if not exists public_keys (id INTEGER PRIMARY KEY AUTO_INCREMENT, key_nm varchar not null, type varchar, fingerprint varchar, public_key varchar, enabled boolean not null default true, create_dt timestamp not null default CURRENT_TIMESTAMP(), user_id INTEGER, profile_id INTEGER, foreign key (profile_id) references profiles(id) on delete cascade, foreign key (user_id) references users(id) on delete cascade)");
+
+        statement.executeUpdate("create table if not exists session_log (id BIGINT PRIMARY KEY AUTO_INCREMENT, session_tm timestamp default CURRENT_TIMESTAMP, first_nm varchar, last_nm varchar, username varchar not null, ip_address varchar)");
+        statement.executeUpdate("create table if not exists rules (id BIGINT PRIMARY KEY AUTO_INCREMENT, ruleName varchar, ruleClass varchar, ruleConfig varchar)");
+        statement.executeUpdate("create table if not exists system_rules (id INTEGER PRIMARY KEY AUTO_INCREMENT,system_id INTEGER, rule_id INTEGER, foreign key (system_id) references system(id), foreign key (rule_id) references rules(id))");
+        statement.executeUpdate("create table if not exists terminal_log (session_id BIGINT, instance_id INTEGER, output varchar not null, log_tm timestamp default CURRENT_TIMESTAMP, display_nm varchar not null, username varchar not null, host varchar not null, port INTEGER not null, foreign key (session_id) references session_log(id) on delete cascade)");
+
+
+
+        // jit information
+        statement.executeUpdate("create table if not exists jit_reasons (id BIGINT PRIMARY KEY AUTO_INCREMENT, command_need varchar not null, reason_identifier varchar, url varchar)");
+        statement.executeUpdate("create table if not exists jit_requests (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT, system_id BIGINT, command varchar not null, command_hash varchar not null, jit_reason_id BIGINT, last_updated timestamp default CURRENT_TIMESTAMP,  foreign key (user_id) references users(id), foreign key (jit_reason_id) references jit_reasons(id), foreign key (system_id) references system(id))");
+        //log_tm timestamp default CURRENT_TIMESTAMP, approved boolean not null default false
+        statement.executeUpdate("create table if not exists jit_approvals (id BIGINT PRIMARY KEY AUTO_INCREMENT, approver_id BIGINT, jit_request_id BIGINT, approved boolean not null default false, last_updated timestamp default CURRENT_TIMESTAMP,  foreign key (approver_id) references users(id), foreign key (jit_request_id) references jit_requests(id))");
+
+        // proxy
+        statement.executeUpdate("create table if not exists host_proxies (id BIGINT PRIMARY KEY AUTO_INCREMENT, system_id BIGINT, base_url varchar not null, port INTEGER, last_updated timestamp default CURRENT_TIMESTAMP, foreign key (system_id) references system(id))");
+
+        statement.executeUpdate("create table if not exists host_proxy_assignments (id BIGINT PRIMARY KEY AUTO_INCREMENT, proxy_id BIGINT, user_id BIGINT,  foreign key (user_id) references users(id), foreign key (proxy_id) references host_proxies(id))");
+
+        connection.close();
+    }
+
 }
